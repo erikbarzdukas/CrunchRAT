@@ -109,6 +109,9 @@
 
           # Kills database connection
           $statement->connection = null;
+
+          # Uses POST, Redirect, and GET method to clear POST data
+          header("Location: commandSubmit.php");
         }
       ?>
     </div> <!-- /container -->
