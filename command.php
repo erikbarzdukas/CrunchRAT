@@ -13,6 +13,7 @@
   {
     # Includes the RAT configuration file
     include "config/config.php";
+    
     # Establishes a connection to the RAT database
     # Uses variables from "config/config.php"
     # "SET NAMES utf8" is necessary to be Unicode-friendly
