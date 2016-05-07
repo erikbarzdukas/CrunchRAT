@@ -104,7 +104,7 @@
             # Moves uploaded file from the /tmp directory to the /var/www/html/uploads/<SYSTEM> directory
             $filename = $_FILES["upload"]["name"];
             $tempFilePath = $_FILES["upload"]["tmp_name"];
-            $fileDestination = $webrootPath . "/uploads/" . $hostname . "/" . $filename;
+            $fileDestination = $uploadsPath . $hostname . "/" . $filename;
             move_uploaded_file($tempFilePath, $fileDestination);
 
             # Inserts upload task into "tasks" table
