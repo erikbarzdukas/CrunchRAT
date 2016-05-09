@@ -50,7 +50,8 @@
             <ul class="nav">
               <li><a href="hosts.php">Hosts</a></li>
               <li><a href="command.php">Task Command</a></li>
-              <li><a href="upload.php">Task File Upload</a></li>
+              <li><a href="upload.php">Task File Upload</a></li>\
+              <li><a href="download.php">Task File Download</a></li>
               <li class="active"><a href="output.php">View Output</a></li>
               <li><a href="logout.php">Logout</a></li>
             </ul>
