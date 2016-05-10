@@ -13,7 +13,7 @@ apt-get install -y apache2
 apt-get install -y mysql-server
 
 # Installs PHP
-apt-get install php libapache2-mod-php php-mcrypt php-mysql
+apt-get install -y php libapache2-mod-php php-mcrypt php-mysql
 
 # Restarts Apache service
 service apache2 restart
