@@ -10,7 +10,7 @@ apt-get install -y apache2
 apt-get install -y mysql-server php5-mysql
 
 # Installs PHP
-apt-get install php5
+apt-get install -y php5
 
 # Restarts Apache service
 service apache2 restart
