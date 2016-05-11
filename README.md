@@ -48,3 +48,12 @@ Targeted Framework: .NET Framework 3.5 (enabled by default on Windows 7 systems)
 4. Make sure `Target Framework` is `.NET Framework 3.5`.
 5. In the actual code, there will be a variable called `c2` - Change this variable to the IP address or domain name of the C2 server
 6. Compile and your implant executable is ready to run.
+
+## Thanks
+Special thanks to the following people for helping me along the way:
+* Michael Bailey
+* Peter Kacherginsky
+* Andy Rector
+* Cole Hoven
+* Erik Barzdukas
+* Nick Gordon
