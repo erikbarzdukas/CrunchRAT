@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
-  <head>
+  <head> <!-- Start of header -->
     <meta charset="utf-8">
     <title>CrunchRAT</title>
-    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bootstrap/css/bootstrap.css" rel="stylesheet"> <!-- Bootstrap CSS -->
     <style>
       body 
       {
@@ -11,11 +11,11 @@
       }
     </style>
     <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-  </head>
+  </head> <!-- End of header -->
 
-  <body>
-    <div class="container">          
-      <p>You are not authorized to view this page.</p>
-    </div><!-- /container -->
-  </body>
+  <body> <!-- Start of body -->
+    <div class="container"> <!-- Start of container -->        
+      <p>You are not authorized to view this page. Return to the login page <a href="login.php">here</a>.</p>
+    </div> <!-- End of container -->
+  </body> <!-- End of body -->
 </html>
