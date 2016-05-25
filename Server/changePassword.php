@@ -42,8 +42,7 @@
         <li class="nav-item"><a class="nav-link" href="tasks.php">Tasks</a></li>
         <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Management <span class="caret"></span></a> <!-- Start of "Account Management" drop-down menu -->
           <ul class="dropdown-menu">
-            <li><a href="addUser.php">Add Account</a></li>
-            <li><a href="deleteUser.php">Delete Account</a></li> 
+            <li><a href="addUser.php">Add User</a></li>
             <li><a href="changePassword.php">Change Password</a></li>
             <li role="separator" class="divider"></li>
             <li><a href="logout.php">Logout</a></li>
