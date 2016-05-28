@@ -23,45 +23,48 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
+  <head> <!-- Start of header -->
     <meta charset="utf-8">
     <title>CrunchRAT</title>
-    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style>
-      body 
-      {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-  </head>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css"> <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css"> <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"> <!-- Bootstrap CSS -->
+    <script src="jquery/jquery.min.js"></script> <!-- jQuery JavaScript -->
+    <script src="bootstrap/js/bootstrap.min.js"></script> <!-- Bootstrap JavaScript - This line has to be after the jQuery script tag for some reason -->
+    <link rel="stylesheet" type="text/css" href="jquery/jquery.dataTables.css"> <!-- dataTables CSS -->
+    <script type="text/javascript" charset="utf8" src="jquery/jquery.dataTables.min.js"></script> <!-- dataTables JavaScript -->
+  </head> <!-- End of header -->
 
-  <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#">CrunchRAT</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="hosts.php">Hosts</a></li>
-              <li><a href="command.php">Task Command</a></li>
-              <li><a href="upload.php">Task File Upload</a></li>
-              <li><a href="download.php">Task File Download</a></li>
-              <li><a href="output.php">View Output</a></li>
-              <li><a href="logout.php">Logout</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
+  <body> <!-- Start of body -->
+    <nav class="navbar navbar-default"> <!-- Start of navigation bar -->
+      <a class="navbar-brand" href="#">CrunchRAT</a>
+      <ul class="nav navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
+        <li class="nav-item active"><a class="nav-link" href="hosts.php">Hosts</a></li>
 
-    <div class="container">          
-      <table class="table table-bordered">
+        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Task <span class="caret"></span></a> 
+          <ul class="dropdown-menu"> <!-- Start of "Task" drop-down menu -->
+            <li><a href="tasks.php">View Tasks</a></li>
+            <li><a href="command.php">Task Command</a></li>
+            <li><a href="upload.php">Task Upload</a></li>
+            <li><a href="download.php">Task Download</a></li>
+          </ul>
+        </li> <!-- End of "Task" drop-down menu -->
+
+        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Management <span class="caret"></span></a> <!-- Start of "Account Management" drop-down menu -->
+          <ul class="dropdown-menu">
+            <li><a href="addUser.php">Add User</a></li>
+            <li><a href="changePassword.php">Change Password</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="logout.php">Logout</a></li>
+          </ul>
+        </li> <!-- End of "Account Management" drop-down menu -->
+        <li class="navbar-text">Currently signed in as: <b><?php echo htmlentities($_SESSION["username"]); # htmlentities() is used to protect against stored XSS here ?></b></li>
+      </ul>
+    </nav> <!-- End of navigation bar -->
+
+    <div class="container"> <!-- Start of main body container -->
+      <table id="hostsTable"> <!-- Start of hosts dataTable -->
         <thead>
           <tr>
             <th>Hostname</th>
@@ -70,6 +73,7 @@
             <th>CPU Architecture</th>
           </tr>
         </thead>
+
         <tbody>
         <?php
           # Gets a list of all of the hosts that have beaconed
@@ -77,36 +81,30 @@
           $statement = $dbConnection->prepare("SELECT hostname, date, os, architecture FROM hosts");
           $statement->execute();
           $results = $statement->fetchAll();
+
+          # Kills database connection
           $statement->connection = null;
 
           # Builds HTML table for each host in the "hosts" table
           foreach ($results as $row)
           {
-            echo "<tr>";
+            echo "<tr>"; # Start of HTML table row
             echo "<td>" . $row["hostname"] . "</td>";
             echo "<td>" . $row["date"] . "</td>";
             echo "<td>" . $row["os"] . "</td>";
             echo "<td>" . $row["architecture"] . "</td>";
-            echo "</tr>";
+            echo "</tr>"; # End of HTML table row
           }
         ?>
         </tbody>
-      </table>
-    </div><!-- /container -->
+      </table> <!-- End of hosts dataTable -->
 
-    <!-- Javascript - placed at the bottom so it loads faster -->
-    <script src="bootstrap/js/jquery.js"></script>
-    <script src="bootstrap/js/bootstrap-transition.js"></script>
-    <script src="bootstrap/js/bootstrap-alert.js"></script>
-    <script src="bootstrap/js/bootstrap-modal.js"></script>
-    <script src="bootstrap/js/bootstrap-dropdown.js"></script>
-    <script src="bootstrap/js/bootstrap-scrollspy.js"></script>
-    <script src="bootstrap/js/bootstrap-tab.js"></script>
-    <script src="bootstrap/js/bootstrap-tooltip.js"></script>
-    <script src="bootstrap/js/bootstrap-popover.js"></script>
-    <script src="bootstrap/js/bootstrap-button.js"></script>
-    <script src="bootstrap/js/bootstrap-collapse.js"></script>
-    <script src="bootstrap/js/bootstrap-carousel.js"></script>
-    <script src="bootstrap/js/bootstrap-typeahead.js"></script>
-  </body>
+      <!-- Start of dataTable JavaScript code -->
+      <script> 
+        $(function(){
+          $("#hostsTable").dataTable();
+        })
+      </script> <!-- End of dataTable JavaScript code -->
+    </div> <!-- End main body container -->
+  </body> <!-- End of body -->
 </html>
