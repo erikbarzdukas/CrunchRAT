@@ -90,7 +90,7 @@
           foreach ($results as $row)
           {
             echo "<tr>"; # Start of HTML table row
-            echo "<td>" . $row["id"] . "</td>";
+            echo "<td>" . $row["id"] . "&ensp;&ensp;<a type='submit' name='test' class='btn btn-danger btn-xs' href='deleteTask.php?id=" . $row["id"] . "'>Delete Task</a></td>";
             echo "<td>" . $row["user"] . "</td>";
             echo "<td>" . $row["hostname"] . "</td>";
             echo "<td>" . $row["action"] . "</td>";
@@ -100,6 +100,8 @@
         ?>
         </tbody>
       </table> <!-- End of tasks dataTable -->
+
+
 
       <!-- Start of dataTable JavaScript code -->
       <script> 
