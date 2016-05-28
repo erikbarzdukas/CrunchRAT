@@ -39,8 +39,17 @@
       <ul class="nav navbar-nav">
         <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
         <li class="nav-item"><a class="nav-link" href="hosts.php">Hosts</a></li>
-        <li class="nav-item"><a class="nav-link" href="tasks.php">Tasks</a></li>
-        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Management <span class="caret"></span></a> <!-- Start of "Account Management" drop-down menu -->
+
+        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Task <span class="caret"></span></a> 
+          <ul class="dropdown-menu"> <!-- Start of "Task" drop-down menu -->
+            <li><a href="tasks.php">View Tasks</a></li>
+            <li><a href="command.php">Task Command</a></li>
+            <li><a href="upload.php">Task Upload</a></li>
+            <li><a href="download.php">Task Download</a></li>
+          </ul>
+        </li> <!-- End of "Task" drop-down menu -->
+
+        <li class="dropdown active"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Management <span class="caret"></span></a> <!-- Start of "Account Management" drop-down menu -->
           <ul class="dropdown-menu">
             <li><a href="addUser.php">Add User</a></li>
             <li><a href="changePassword.php">Change Password</a></li>
