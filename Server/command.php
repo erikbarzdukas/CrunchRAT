@@ -1,7 +1,7 @@
 <?php
   # Necessary at the top of every page for session management
   session_start();
-        
+
   # If the RAT user isn't authenticated
   if (!isset($_SESSION["authenticated"]))
   {
@@ -13,7 +13,7 @@
   {
     # Includes the RAT configuration file
     include "config/config.php";
-    
+
     # Establishes a connection to the RAT database
     # Uses variables from "config/config.php"
     # "SET NAMES utf8" is necessary to be Unicode-friendly
@@ -23,46 +23,47 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
+  <head> <!-- Start of header -->
     <meta charset="utf-8">
     <title>CrunchRAT</title>
-    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style>
-      body 
-      {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-  </head>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css"> <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css"> <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"> <!-- Bootstrap CSS -->
+    <script src="jquery/jquery.min.js"></script> <!-- jQuery JavaScript -->
+    <script src="bootstrap/js/bootstrap.min.js"></script> <!-- Bootstrap JavaScript - This line has to be after the jQuery script tag for some reason -->
+  </head> <!-- End of header -->
 
-  <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#">CrunchRAT</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li><a href="hosts.php">Hosts</a></li>
-              <li class="active"><a href="command.php">Task Command</a></li>
-              <li><a href="upload.php">Task File Upload</a></li>
-              <li><a href="download.php">Task File Download</a></li>
-              <li><a href="output.php">View Output</a></li>
-              <li><a href="logout.php">Logout</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
+  <body> <!-- Start of body -->
+    <nav class="navbar navbar-default"> <!-- Start of navigation bar -->
+      <a class="navbar-brand" href="#">CrunchRAT</a>
+      <ul class="nav navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="hosts.php">Hosts</a></li>
 
-    <div class="container">
-      <form role="form" class="form-inline" method="post">Host:&ensp;&ensp; 
-        <select class="form-control" name="hostname">
+        <li class="dropdown active"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Task <span class="caret"></span></a> 
+          <ul class="dropdown-menu"> <!-- Start of "Task" drop-down menu -->
+            <li><a href="tasks.php">View Tasks</a></li>
+            <li><a href="command.php">Task Command</a></li>
+            <li><a href="upload.php">Task Upload</a></li>
+            <li><a href="download.php">Task Download</a></li>
+          </ul>
+        </li> <!-- End of "Task" drop-down menu -->
+
+        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Management <span class="caret"></span></a> <!-- Start of "Account Management" drop-down menu -->
+          <ul class="dropdown-menu">
+            <li><a href="addUser.php">Add User</a></li>
+            <li><a href="changePassword.php">Change Password</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="logout.php">Logout</a></li>
+          </ul>
+        </li> <!-- End of "Account Management" drop-down menu -->
+        <li class="navbar-text">Currently signed in as: <b><?php echo htmlentities($_SESSION["username"]); # htmlentities() is used to protect against stored XSS here ?></b></li>
+      </ul>
+    </nav> <!-- End of navigation bar -->
+
+    <div class="container"> <!-- Start of main body container -->
+      <form role="form" class="form-inline" method="post"> <!-- Start of task command form -->
+        <select name="hostname">
         <?php
           # Determines the hosts that have previously beaconed
           $statement = $dbConnection->prepare("SELECT hostname FROM hosts");
@@ -78,59 +79,57 @@
             echo "<option value=" . "\"" . $row["hostname"] . "\"" . ">" . $row["hostname"] . "</option>";
           }
         ?>
-        </select>&ensp;Command:&ensp;&ensp;	
-        <input type="text" class="form-control" name="command">&ensp;
-        <button type="submit" class="btn btn-primary">Task Command</button>
-      </form>
+        </select>
+        <input type="text" style="width: 400px;" class="form-control" name="command" placeholder="Command">
+        <button type="submit" name="submit" class="btn btn-default">Task Command</button>
+      </form> <!-- End of task command form -->
+
       <?php
-        # This is called when the RAT user hits "Task Command"
-        # A host has to be selected and a command has to be entered for this to execute
-        # This prevent null entries from being added to the "tasks" table
-        if (isset($_POST["hostname"]) && !empty($_POST["hostname"]) && isset($_POST["command"]) && !empty($_POST["command"]))
+        # If the user clicked "Task Command"
+        if (isset($_POST["submit"]))
         {
-          # Stores the hostname that was selected
-          $hostname = $_POST["hostname"];
+          # If all fields are set
+          # Prevent null entries from being added to the "tasks" table
+          if (isset($_POST["hostname"]) && !empty($_POST["hostname"]) && isset($_POST["command"]) && !empty($_POST["command"]))
+          {
+            $hostname = $_POST["hostname"]; # Hostname that was selected
+            $command = $_POST["command"];   # Command that was entered
+            $username = $_SESSION["username"]; # Current logged in user
 
-          # Stores the command that was selected
-          $command = $_POST["command"];
+            # Inserts user, action, hostname, and secondary into "tasks" table
+            $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, hostname, secondary) VALUES (:user, :action, :hostname, :secondary)");
+            $statement->bindValue(":user", $username);
+            $statement->bindValue(":action", "command");
+            $statement->bindValue(":hostname", $hostname);
+            $statement->bindValue(":secondary", $command);  
+            $statement->execute();
 
-          # Inserts action, hostname, and secondary into "tasks" table
-          $statement = $dbConnection->prepare("INSERT INTO tasks (action, hostname, secondary) VALUES (:action, :hostname, :secondary)");
-          $statement->bindValue(":action", "command");
-          $statement->bindValue(":hostname", $hostname);
-          $statement->bindValue(":secondary", $command);	
-          $statement->execute();
+            # Inserts usern, hostname, action, secondary, and status into "output" table
+            $statement = $dbConnection->prepare("INSERT INTO output (user, hostname, action, secondary, status) VALUES (:user, :hostname, :action, :secondary, :status)");
+            $statement->bindValue(":user", $username);
+            $statement->bindValue(":hostname", $hostname);
+            $statement->bindValue(":action", "command");
+            $statement->bindValue(":secondary", $command);
+            $statement->bindValue(":status", "N");
+            $statement->execute();
 
-          # Inserts hostname, action, secondary, and status into "output" table
-          $statement = $dbConnection->prepare("INSERT INTO output (hostname, action, secondary, status) VALUES (:hostname, :action, :secondary, :status)");
-          $statement->bindValue(":hostname", $hostname);
-          $statement->bindValue(":action", "command");
-          $statement->bindValue(":secondary", $command);
-          $statement->bindValue(":status", "N");
-          $statement->execute();
+            # Kills database connection
+            $statement->connection = null;
 
-          # Kills database connection
-          $statement->connection = null;
+            # Displays success message - "Successfully tasked command. Redirecting back to command.php in 3 seconds. Do not refresh the page."
+            echo "<br><div class='alert alert-success'>Successfully tasked command. Redirecting back to command.php in 3 seconds. Do not refresh the page.</div>";
 
-          # Uses POST, Redirect, and GET method to clear POST data
-          header("Location: commandSubmit.php");
+            # Waits 5 seconds, then redirects to commandSubmit.php
+            # This is a hack to clear out the POST data
+            header('Refresh: 3; URL=commandSubmit.php');
+          }
+          else
+          {
+            # Displays error message - "Please fill out all fields."
+            echo "<br><div class='alert alert-danger'>Please fill out all fields.</div>";
+          }
         }
       ?>
-    </div> <!-- /container -->
-
-    <!-- Javascript - placed at the bottom so it loads faster -->
-    <script src="bootstrap/js/jquery.js"></script>
-    <script src="bootstrap/js/bootstrap-transition.js"></script>
-    <script src="bootstrap/js/bootstrap-alert.js"></script>
-    <script src="bootstrap/js/bootstrap-modal.js"></script>
-    <script src="bootstrap/js/bootstrap-dropdown.js"></script>
-    <script src="bootstrap/js/bootstrap-scrollspy.js"></script>
-    <script src="bootstrap/js/bootstrap-tab.js"></script>
-    <script src="bootstrap/js/bootstrap-tooltip.js"></script>
-    <script src="bootstrap/js/bootstrap-popover.js"></script>
-    <script src="bootstrap/js/bootstrap-button.js"></script>
-    <script src="bootstrap/js/bootstrap-collapse.js"></script>
-    <script src="bootstrap/js/bootstrap-carousel.js"></script>
-    <script src="bootstrap/js/bootstrap-typeahead.js"></script>
-  </body>
+    </div> <!-- End main body container -->
+  </body> <!-- End of body -->
 </html>
