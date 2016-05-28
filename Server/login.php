@@ -40,7 +40,7 @@
       </form>
 
     <?php
-      # If the clicked "Login"
+      # If the user clicked "Login"
       if (isset($_POST["submit"]))
       {
         $username = $_POST["username"]; # Username
