@@ -124,10 +124,17 @@
           # Else the passwords do not match
           else
           {
+            # Displays error message - "The passwords are not the same. Please enter the passwords again."
             echo "<br><div class='alert alert-danger'>The passwords are not the same. Please enter the passwords again.</div>";
           }
         }
-      } 
+        # Else they are missing fields
+        else
+        {
+          # Displays error message - "Please fill out all fields."
+          echo "<br><div class='alert alert-danger'>Please fill out all fields.</div>";
+        }
+      }
     ?>
   </div> <!-- End main body container -->
   </body> <!-- End of body -->

@@ -141,6 +141,12 @@
             echo "<br><div class='alert alert-danger'>Invalid password for the current user.</div>";
           }  
         }
+        # Else they are missing fields
+        else
+        {
+          # Displays error message - "Please fill out all fields."
+          echo "<br><div class='alert alert-danger'>Please fill out all fields.</div>";
+        }
       }     
     ?>
   </div> <!-- End main body container -->
