@@ -21,6 +21,19 @@
 
     $id = $_GET["id"]; # Task ID to be deleted
 
+    # Gets action from "tasks" table
+    $statement = $dbConnection->prepare("SELECT action, secondary FROM tasks WHERE id = :id");
+    $statement->bindValue(":id", $id);
+    $statement->execute();
+    $results = $statement->fetch();
+
+    # If the task was a file upload, we need to delete the tasked uploaded file
+    if ($results["action"] == "upload")
+    {
+      # Deletes tasked upload file
+      unlink($webrootPath . $results["secondary"]);
+    }
+    
     # Deletes task from "tasks" table
     $statement = $dbConnection->prepare("DELETE FROM tasks WHERE id = :id");
     $statement->bindValue(":id", $id);
@@ -31,6 +44,7 @@
     $statement->bindValue(":id", $id);
     $statement->execute();
 
+    # Kills database connection
     $statement->connection = null;
 
     # Redirects the user back to tasks.php
