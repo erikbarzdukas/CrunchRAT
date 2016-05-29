@@ -118,7 +118,7 @@
             # Displays success message - "Successfully tasked file download. Redirecting back to download.php in 3 seconds. Do not refresh the page."
             echo "<br><div class='alert alert-success'>Successfully tasked file download. Redirecting back to download.php in 3 seconds. Do not refresh the page.</div>";
 
-            # Waits 5 seconds, then redirects to downloadSubmit.php - Clears POST data
+            # Waits 3 seconds, then redirects to downloadSubmit.php
             # This is a hack to clear out the POST data
             header('Refresh: 3; URL=downloadSubmit.php');
           }
