@@ -64,7 +64,7 @@
     </nav> <!-- End of navigation bar -->
 
     <div class="container"> <!-- Start of main body container -->
-      <table id="tasksTable"> <!-- Start of tasks dataTable -->
+      <table class="display" id="tasksTable"> <!-- Start of tasks dataTable -->
         <thead>
           <tr>
             <th>Task ID</th>
