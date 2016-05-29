@@ -101,8 +101,6 @@
         </tbody>
       </table> <!-- End of tasks dataTable -->
 
-
-
       <!-- Start of dataTable JavaScript code -->
       <script> 
         $(document).ready(function() {
