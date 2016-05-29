@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"> <!-- Bootstrap CSS -->
     <script src="jquery/jquery.min.js"></script> <!-- jQuery JavaScript -->
     <script src="bootstrap/js/bootstrap.min.js"></script> <!-- Bootstrap JavaScript - This line has to be after the jQuery script tag for some reason -->
-    <link rel="stylesheet" type="text/css" href="jquery/jquery.dataTables.css"> <!-- dataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="jquery/jquery.dataTables.min.css"> <!-- dataTables CSS -->
     <script type="text/javascript" charset="utf8" src="jquery/jquery.dataTables.min.js"></script> <!-- dataTables JavaScript -->
   </head> <!-- End of header -->
 
@@ -105,9 +105,11 @@
 
       <!-- Start of dataTable JavaScript code -->
       <script> 
-        $(function(){
-          $("#tasksTable").dataTable();
-        })
+        $(document).ready(function() {
+          $('#tasksTable').DataTable( {
+            stateSave: true
+          } );
+        } );
       </script> <!-- End of dataTable JavaScript code -->
     </div> <!-- End main body container -->
   </body> <!-- End of body -->
