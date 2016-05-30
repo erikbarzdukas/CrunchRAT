@@ -102,15 +102,15 @@
             {
               # Does the /var/www/html/uploads/<SYSTEM> directory exist?
               # If not we create the directory
-              if (!file_exists($uploadsPath . $hostname))
+              if (!file_exists("/var/www/html/uploads". $hostname))
               {
-                mkdir($uploadsPath . $hostname);
+                mkdir("/var/www/html/uploads/" . $hostname);
               }
-                      
+                    
               # Moves uploaded file from the /tmp directory to the /var/www/html/uploads/<SYSTEM> directory
               $filename = $_FILES["upload"]["name"];
               $tempFilePath = $_FILES["upload"]["tmp_name"];
-              $fileDestination = $uploadsPath . $hostname . "/" . $filename;
+              $fileDestination = "/var/www/html/uploads/" . $hostname . "/" . $filename;
               move_uploaded_file($tempFilePath, $fileDestination);
 
               # Inserts upload task into "tasks" table
