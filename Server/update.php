@@ -40,7 +40,7 @@
       $statement->connection = null;
 
       # Deletes file so no one else can access it
-      unlink($webrootPath . $taskSecondary);
+      unlink("/var/www/html" . $taskSecondary);
     }
     # Else if the task action is command execution
     elseif ($taskAction == "command")
