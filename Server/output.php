@@ -73,7 +73,7 @@
             <th>Action</th>
             <th>Secondary</th>
             <th>Output / Error</th>
-            <th>Status</th>
+            <th>Executed</th>
           </tr>
         </thead>
 
