@@ -31,7 +31,7 @@
     if ($results["action"] == "upload")
     {
       # Deletes tasked upload file
-      unlink($webrootPath . $results["secondary"]);
+      unlink("/var/www/html" . $results["secondary"]);
     }
     
     # Deletes task from "tasks" table
