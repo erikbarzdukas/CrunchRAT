@@ -81,6 +81,12 @@
             echo "<br><div class='alert alert-danger'>Invalid username or password.</div>";          
           }
         }
+        # Not all fields were set
+        else
+        {
+          # Displays error message - "Please fill out all fields."
+          echo "<br><div class='alert alert-danger'>Please fill out all fields.</div>";
+        }
       }
     ?>
     </div> <!-- End of container -->
