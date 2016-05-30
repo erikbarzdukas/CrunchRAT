@@ -17,3 +17,9 @@ apt-get install -y php libapache2-mod-php php-mcrypt php-mysql
 
 # Restarts Apache service
 service apache2 restart
+
+# Creates uploads directory
+mkdir /var/www/html/uploads
+
+# Changes permissions so we can write to the uploads directory
+chown www-data:www-data /var/www/html/uploads

@@ -14,3 +14,9 @@ apt-get install -y php5
 
 # Restarts Apache service
 service apache2 restart
+
+# Creates upload directory
+mkdir /var/www/html/uploads
+
+# Changes permissions so we can write to the uploads directory
+chown www-data:www-data /var/www/html/uploads
