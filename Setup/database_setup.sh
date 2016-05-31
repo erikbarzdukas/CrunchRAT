@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "=============================================";
+echo "============================================================";
 echo "Starting database setup...";
-echo "=============================================";
+echo "============================================================";
 echo "Please enter MySQL root password: ";
 read rootPassword; # Gets MySQL root password from the user
 
@@ -16,14 +16,17 @@ statement="$statement CREATE TABLE tasks (id INT(16) AUTO_INCREMENT, user VARCHA
 statement="$statement CREATE TABLE output (id INT(16) AUTO_INCREMENT, user VARCHAR(50), hostname VARCHAR(100), action VARCHAR(20), secondary TEXT(65535), stdout TEXT(65535), stderr TEXT(65535), status VARCHAR(1), PRIMARY KEY (id)); ";
 statement="$statement CREATE TABLE chat (user VARCHAR(50), date VARCHAR(100), message TEXT(65535)); ";
 
-mysql -u"root" -p$rootPassword -e"$statement"
+mysql -u"root" -p"$rootPassword" -e"$statement"
 
 # If any errors during database setup
 if [ "$?" != "0" ]; then
-	echo "Error during creation - Please make sure you entered the correct root MySQL password";
+  echo "============================================================";
+  echo "Error during creation";
+  echo "Please make sure you entered the correct root MySQL password";
+  echo "============================================================";
 # Else no errors and we need to inform the user that the database creation is complete
 else
-	echo "=============================================";
-	echo "Database setup complete";
-	echo "=============================================";
+  echo "============================================================";
+  echo "Database setup complete";
+  echo "============================================================";
 fi
