@@ -22,5 +22,9 @@ a2ensite CrunchRAT.conf
 # Uses sed to comment out "Listen 80" line in /etc/apache2/ports.conf
 sed -i -e 's/Listen 80/#Listen 80/g' /etc/apache2/ports.conf
 
+# Prevents "Server" header information disclosure
+echo "ServerTokens Prod" >> /etc/apache2/apache2.conf
+echo "ServerSignature Off" >> /etc/apache2/apache2.conf
+
 # Restart Apache2 service
 service apache2 restart
