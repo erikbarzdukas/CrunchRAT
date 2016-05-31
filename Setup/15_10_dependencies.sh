@@ -12,6 +12,9 @@ apt-get install -y mysql-server php5-mysql
 # Installs PHP
 apt-get install -y php5
 
+# Removes default index.html file
+rm -rf /var/www/html/index.html
+
 # Restarts Apache service
 service apache2 restart
 
