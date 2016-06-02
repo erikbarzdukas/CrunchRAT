@@ -52,3 +52,4 @@ Special thanks to the following people for helping me along the way:
 * Cole Hoven
 * Erik Barzdukas
 * Nick Gordon
+* Chris Truncer
