@@ -32,4 +32,8 @@ else
 
   # Changes permissions so we can write to the uploads directory
   chown www-data:www-data /var/www/html/uploads
+  
+  # Uses sed to increase the maximum POST size to 500 megs in php.ini
+  sed -i -e 's/post_max_size = 8M/post_max_size = 500M/g' /etc/php/7.0/apache2/php.ini
+  sed -i -e 's/upload_max_filesize = 2M/upload_max_filesize = 500M/g' /etc/php/7.0/apache2/php.ini
 fi
