@@ -4,13 +4,14 @@
 // Function prototypes
 wstring getHostname();
 wstring getOS();
-
+wstring getArchitecture();
 
 // Start of main() function
 int main()
 {
 	wcout << getHostname() << endl;
 	wcout << getOS() << endl;
+	wcout << getArchitecture() << endl;
 	
 	return 0;
 }
@@ -41,10 +42,30 @@ wstring getOS()
 	DWORD size;
 	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, NULL, &size); // Queries the size (in bytes) for the "ProductName" Registry key - Will save size (in bytes) including null-terminator in "size" DWORD
 	
-	wchar_t buffer[256]; // EWWWW ...HARD-CODED ARRAY SIZE
+	wchar_t buffer[256] = L""; // EWWWW ...HARD-CODED ARRAY SIZE
 	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, (LPBYTE) &buffer, &size); // Queries the "ProductName" Registry key and stores output in buffer
 
 	wstring os = buffer; // Creates new "os" wstring and sets value to the wchar_t array buffer above
+
+	RegCloseKey(hRegistry); // Closes the Registry handle
+
 	return os; // Returns the "os" wstring to the calling function
 }
 // End of getOS() function
+
+
+// Gets the system architecture - Working as of 06/06/16 - DOES NOT TAKE INTO ACCOUNT NON C: SYSTEM DRIVES (IE: OTHER DRIVE LETTERS)
+// Returns "architecture" wstring
+wstring getArchitecture()
+{
+	wstring architecture = L""; // Creates "architecture" wstring
+	BOOL exists = PathFileExists(L"C:\\Windows\\SysWOW64"); // Determines if C:\Windows\SysWOW64 directory exists
+
+	if (exists == TRUE) // If true, then the system architecture is x64
+		architecture = L"x64";
+	else // Else the system architecture is x86
+		architecture = L"x86";
+
+	return architecture; // Retruns the "architecture" wstring to the calling function
+}
+// End of getArchitecture() function
