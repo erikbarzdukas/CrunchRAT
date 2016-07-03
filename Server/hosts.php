@@ -68,9 +68,11 @@
         <thead>
           <tr>
             <th>Hostname</th>
-            <th>Last Beacon Date (UTC)</th>
+            <th>Last Beacon (UTC)</th>
             <th>Operating System</th>
             <th>CPU Architecture</th>
+            <th>Process ID</th>
+            <th>Process Name</th>
           </tr>
         </thead>
 
@@ -78,7 +80,7 @@
         <?php
           # Gets a list of all of the hosts that have beaconed
           # This information will be used to build a HTML table
-          $statement = $dbConnection->prepare("SELECT hostname, date, os, architecture FROM hosts");
+          $statement = $dbConnection->prepare("SELECT hostname, date, os, architecture, pid, pfilename FROM hosts");
           $statement->execute();
           $results = $statement->fetchAll();
 
@@ -93,6 +95,8 @@
             echo "<td>" . $row["date"] . "</td>";
             echo "<td>" . $row["os"] . "</td>";
             echo "<td>" . $row["architecture"] . "</td>";
+            echo "<td>" . $row["pid"] . "</td>";
+            echo "<td>" . $row["pfilename"] . "</td>";
             echo "</tr>"; # End of HTML table row
           }
         ?>
