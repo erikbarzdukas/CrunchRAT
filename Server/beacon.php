@@ -87,7 +87,7 @@
         $taskSecondary = $results["secondary"];
 
         # Echoes the task data to the HTTP response
-        echo "<id>" . $taskID . "<id><action>" . $taskAction . "<action><secondary>" . $taskSecondary . "<secondary>";
+        echo "<id>" . $taskID . "</id><action>" . $taskAction . "</action><secondary>" . $taskSecondary . "</secondary>";
       }
 
       # Kills the database connection
