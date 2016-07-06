@@ -66,11 +66,11 @@
         <tbody>
         <?php
           # If user clicked "stdout" hyperlink from output.php
-          # Displays only stdout
-          if (isset($_GET["id"]) && isset($_GET["stdout"]))
+          # Displays command output for the task ID
+          if (isset($_GET["id"]))
           {
             # Gets stdout for the command
-            $statement = $dbConnection->prepare("SELECT stdout FROM output WHERE id = :id");
+            $statement = $dbConnection->prepare("SELECT output FROM output WHERE id = :id");
             $statement->bindValue(":id", $_GET["id"]);
             $statement->execute();
             $results = $statement->fetch();
@@ -79,24 +79,7 @@
             $statement->connection = null;
 
             # Displays command output in HTML table
-            echo "<pre>" . htmlentities($results["stdout"], ENT_QUOTES, "UTF-8") . "</pre>";
-          }
-            
-          # If user clicked "stderr" hyperlink from output.php
-          # Displays only stderr
-          if (isset($_GET["id"]) && isset($_GET["stderr"]))
-          {
-            # Gets stderr for the command
-            $statement = $dbConnection->prepare("SELECT stderr FROM output WHERE id = :id");
-            $statement->bindValue(":id", $_GET["id"]);
-            $statement->execute();
-            $results = $statement->fetch();
-
-            # Kills database connection
-            $statement->connection = null;
-
-            # Displays command error in HTML table
-            echo "<pre>" . htmlentities($results["stderr"], ENT_QUOTES, "UTF-8") . "</pre>";
+            echo "<pre>" . htmlentities($results["output"], ENT_QUOTES, "UTF-8") . "</pre>";
           }
         ?>
         </tbody>
