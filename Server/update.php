@@ -46,19 +46,10 @@
     elseif ($taskAction == "command")
     {
       $output = urldecode($_POST["output"]);           # Could have spaces or special characters so we urldecode()
-      $error = urldecode($_POST["error"]);             # Could have spaces or special characters so we urldecode()
-
-      # Updates "output" table with Standard Output
-      $statement = $dbConnection->prepare("UPDATE output SET stdout = :stdout WHERE id = :id AND action = :action AND secondary = :secondary");
-      $statement->bindValue(":stdout", $output);
-      $statement->bindValue(":id", $taskID);
-      $statement->bindValue(":action", $taskAction);
-      $statement->bindValue(":secondary", $taskSecondary);
-      $statement->execute();
-
-      # Updates "output" table with Standard Error
-      $statement = $dbConnection->prepare("UPDATE output SET stderr = :stderr WHERE id = :id AND action = :action AND secondary = :secondary");
-      $statement->bindValue(":stderr", $error);
+ 
+      # Updates "output" table with command output
+      $statement = $dbConnection->prepare("UPDATE output SET output = :output WHERE id = :id AND action = :action AND secondary = :secondary");
+      $statement->bindValue(":output", $output);
       $statement->bindValue(":id", $taskID);
       $statement->bindValue(":action", $taskAction);
       $statement->bindValue(":secondary", $taskSecondary);
