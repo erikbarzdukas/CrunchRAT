@@ -72,7 +72,7 @@
             <th>Hostname</th>
             <th>Action</th>
             <th>Secondary</th>
-            <th>Output / Error</th>
+            <th>Output</th>
             <th>Executed</th>
           </tr>
         </thead>
@@ -80,7 +80,7 @@
         <tbody>
         <?php
           # Gets everything from "output" table
-          $statement = $dbConnection->prepare("SELECT id, user, hostname, action, secondary, stdout, stderr, status FROM output");
+          $statement = $dbConnection->prepare("SELECT id, user, hostname, action, secondary, output, status FROM output");
           $statement->execute();
           $results = $statement->fetchAll();
 
@@ -97,23 +97,15 @@
             echo "<td>" . htmlentities($row["action"], ENT_QUOTES, "UTF-8") . "</td>";
             echo "<td>" . htmlentities($row["secondary"], ENT_QUOTES, "UTF-8") . "</td>";
             
-            # If "stdout" column is set
-            # We need to create a hyperlink to the "stdout" output instead of "stderr"
-            if (!empty($row["stdout"]))
+            # If "output" column is set
+            # We need to create a hyperlink to the command output
+            if (!empty($row["output"]))
             { 
               # Builds "stdout" hyperlink for the command output
-              $stdoutLink = "<a href='viewOut.php?id=" . $row["id"] . "&stdout=true" . "'>stdout</a>";
+              $stdoutLink = "<a href='viewOut.php?id=" . $row["id"] . "'>stdout</a>";
               echo "<td>" . $stdoutLink . "</td>";   
             }
-            # If "stderr" column is set
-            # We need to create a hyperlink to the "stderr" output instead of "stdout"
-            elseif (!empty($row["stderr"]))
-            {
-              # Builds "stderr" hyperlink for the command error
-              $stderrLink = "<a href='viewOut.php?id=" . $row["id"] . "&stderr=true" . "'>stderr</a>";
-              echo "<td>" . $stderrLink . "</td>";
-            }
-            # Else no stdout or stderr (IE: the tasked command hasn't executed yet)
+            # Else no stdout (IE: the tasked command hasn't executed yet)
             else
             {
               echo "<td></td>";
