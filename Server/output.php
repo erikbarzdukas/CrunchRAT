@@ -102,7 +102,7 @@
             if (!empty($row["output"]))
             { 
               # Builds "stdout" hyperlink for the command output
-              $stdoutLink = "<a href='viewOut.php?id=" . $row["id"] . "'>stdout</a>";
+              $stdoutLink = "<a href='viewOut.php?id=" . $row["id"] . "'>output</a>";
               echo "<td>" . $stdoutLink . "</td>";   
             }
             # Else no stdout (IE: the tasked command hasn't executed yet)
