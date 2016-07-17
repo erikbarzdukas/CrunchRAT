@@ -42,6 +42,7 @@
         <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
         <li class="nav-item"><a class="nav-link" href="hosts.php">Hosts</a></li>
         <li class="nav-item"><a class="nav-link" href="output.php">View Output</a></li>
+        <li class="nav-item"><a class="nav-link" href="generatePayload.php">Generate Payload</a></li>
         <li class="dropdown active"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Task <span class="caret"></span></a> 
           <ul class="dropdown-menu"> <!-- Start of "Task" drop-down menu -->
             <li><a href="tasks.php">View Tasks</a></li>
