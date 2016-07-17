@@ -2,7 +2,10 @@
   # RAT configuration file
 
   # Downloads directory - www-data must have write permission to this directory - Forward slash at the end is necessary and must not be ommitted
-  $downloadsPath = "/home/t3ntman/Desktop/downloads/";
+  $downloadsPath = "/home/t3ntman/downloads/";
+
+  # PowerShell IEX stager file
+  $stagerFilename = "m.ps1";
 
   # Don't change
   $dbHost = "127.0.0.1";
