@@ -47,6 +47,7 @@
             <li><a href="command.php">Task Command</a></li>
             <li><a href="upload.php">Task Upload</a></li>
             <li><a href="download.php">Task Download</a></li>
+            <li><a href="exit.php">Task Implant Exit</a></li>
           </ul>
         </li> <!-- End of "Task" drop-down menu -->
 
@@ -74,7 +75,7 @@
           # Kills database connection
           $statement->connection = null; 
             
-          # Populates each <option> drop-down with our hosts that have beaconed previously
+          # Populates each <option> with our hosts that have beaconed previously
           foreach($hosts as $row)
           {
             echo "<option value=" . "\"" . $row["hostname"] . "\"" . ">" . $row["hostname"] . "</option>";
@@ -120,8 +121,8 @@
             # Kills database connection
             $statement->connection = null;
 
-            # Displays success message - "Successfully tasked file download. Redirecting back to download.php in 1 seconds. Do not refresh the page."
-            echo "<br><div class='alert alert-success'>Successfully tasked file download. Redirecting back to download.php in 1 seconds. Do not refresh the page.</div>";
+            # Displays success message - "Successfully tasked file download. Redirecting back to download.php in 1 second. Do not refresh the page."
+            echo "<br><div class='alert alert-success'>Successfully tasked file download. Redirecting back to download.php in 1 second. Do not refresh the page.</div>";
 
             # Waits 3 seconds, then redirects to downloadSubmit.php
             # This is a hack to clear out the POST data

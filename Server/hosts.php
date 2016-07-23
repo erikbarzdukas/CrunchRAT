@@ -49,6 +49,7 @@
             <li><a href="command.php">Task Command</a></li>
             <li><a href="upload.php">Task Upload</a></li>
             <li><a href="download.php">Task Download</a></li>
+            <li><a href="exit.php">Task Implant Exit</a></li>
           </ul>
         </li> <!-- End of "Task" drop-down menu -->
 
@@ -92,7 +93,7 @@
           foreach ($results as $row)
           {
             echo "<tr>"; # Start of HTML table row
-            echo "<td>" . $row["hostname"] . "</td>";
+            echo "<td>" . $row["hostname"] . "&ensp;&ensp;<a type='submit' class='btn btn-danger btn-xs' href='deleteHost.php?hostname=" . $row["hostname"] . "'>Remove</a></td>";
             echo "<td>" . $row["date"] . "</td>";
             echo "<td>" . $row["os"] . "</td>";
             echo "<td>" . $row["architecture"] . "</td>";

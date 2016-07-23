@@ -47,6 +47,7 @@
             <li><a href="command.php">Task Command</a></li>
             <li><a href="upload.php">Task Upload</a></li>
             <li><a href="download.php">Task Download</a></li>
+            <li><a href="exit.php">Task Implant Exit</a></li>
           </ul>
         </li> <!-- End of "Task" drop-down menu -->
 
