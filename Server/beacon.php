@@ -19,6 +19,8 @@
     $os = urldecode($_POST["os"]);
     $architecture = urldecode($_POST["architecture"]);
 
+    $beaconinterval = $_POST["interval"];
+
     # Stores process related informaton from beacon
     $pid = $_POST["pid"];
     $pfilename = $_POST["pfilename"];
@@ -98,11 +100,12 @@
     else
     {
       # New beaconing host gets added to the "hosts" table
-      $statement = $dbConnection->prepare("INSERT INTO hosts (hostname, date, os, architecture, pid, pfilename) VALUES (:hostname, :date, :os, :architecture, :pid, :pfilename)");
+      $statement = $dbConnection->prepare("INSERT INTO hosts (hostname, date, os, architecture, beaconinterval, pid, pfilename) VALUES (:hostname, :date, :os, :architecture, :beaconinterval, :pid, :pfilename)");
       $statement->bindValue(":hostname", $hostname);
       $statement->bindValue(":date", $date);
       $statement->bindValue(":os", $os);
       $statement->bindValue("architecture", $architecture);
+      $statement->bindValue("beaconinterval", $beaconinterval);
       $statement->bindValue("pid", $pid);
       $statement->bindValue("pfilename", $pfilename);
       $statement->execute();
