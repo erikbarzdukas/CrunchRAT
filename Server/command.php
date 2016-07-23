@@ -121,8 +121,8 @@
             # Kills database connection
             $statement->connection = null;
 
-            # Displays success message - "Successfully tasked command. Redirecting back to command.php in 1 seconds. Do not refresh the page."
-            echo "<br><div class='alert alert-success'>Successfully tasked command. Redirecting back to command.php in 1 seconds. Do not refresh the page.</div>";
+            # Displays success message - "Successfully tasked command. Redirecting back to command.php in 1 second. Do not refresh the page."
+            echo "<br><div class='alert alert-success'>Successfully tasked command. Redirecting back to command.php in 1 second. Do not refresh the page.</div>";
 
             # Waits 3 seconds, then redirects to commandSubmit.php
             # This is a hack to clear out the POST data
