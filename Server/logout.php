@@ -1,10 +1,10 @@
 <?php
-  # Necessary at the top of every page for session management
-  session_start();
-  
-  # Destroys the current session
-  session_destroy();
+    # Necessary at the top of every page for session management
+    session_start();
 
-  # Redirects to login page
-  header("Location: login.php");
+    # Destroys the current session
+    session_destroy();
+    
+    # Redirects to login page
+    header("Location: login.php");
 ?>
