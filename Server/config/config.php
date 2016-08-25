@@ -1,21 +1,15 @@
 <?php
-  # RAT configuration file
+    # RAT configuration file
+  
+    # Don't change
+    $dbHost = "127.0.0.1";
 
-  # Downloads directory - www-data must have write permission to this directory - Forward slash at the end is necessary and must not be ommitted
-  $downloadsPath = "/home/t3ntman/downloads/";
+    # Don't change
+    $dbName = "RAT";
 
-  # PowerShell IEX stager file
-  $stagerFilename = "m.ps1";
+    # Don't change
+    $dbUser = "root";
 
-  # Don't change
-  $dbHost = "127.0.0.1";
-
-  # Don't change
-  $dbName = "RAT";
-
-  # Don't change
-  $dbUser = "root";
-
-  # Change
-  $dbPass = "root";
+    # Change
+    $dbPass = "root";
 ?>
